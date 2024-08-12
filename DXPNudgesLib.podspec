@@ -132,6 +132,7 @@ Pod::Spec.new do |spec|
     spec.dependency 'ZFPlayer/ControlView', '~> 4.0'
     spec.dependency 'ZFPlayer/AVPlayer', '~> 4.0'
     spec.dependency 'ZFPlayer/ijkplayer', '~> 4.0'
+    spec.static_framework = true
 
 
   # spec.library   = "iconv"
