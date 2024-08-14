@@ -26,8 +26,6 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 
-
-
 @interface HJNudgesManager : NSObject
 
 @property (nonatomic, assign) id<NudgesEventDelegate> delegate;
@@ -46,6 +44,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 // 记录当前页面名称
 @property (nonatomic, copy) NSString *currentPageName;
+
+// 页面domTree 数据
+@property (nonatomic, strong) NSDictionary *domTreeDic;
+// 屏幕截图
+@property (nonatomic, strong) UIImage *screenShotImg;
 
 + (instancetype)sharedInstance;
 
@@ -74,11 +77,6 @@ NS_ASSUME_NONNULL_BEGIN
 ///
 - (void)uploadCaptureInfoByScreenShotImg:(UIImage *)screenShotImg domTree:(NSDictionary *)domTree permission:(NSString *)permission;
 
-/// eg: 获取当前window 的domTree
-///
-/// @return DomTree key/value
-- (NSDictionary *)getWindowDomTree;
-
 /// eg: 数据库根据界面查找Nudges
 /// @param pageName 页面名称
 //- (void)selectNudgesDBWithPageName:(NSMutableArray *)nudgesList;
@@ -87,10 +85,6 @@ NS_ASSUME_NONNULL_BEGIN
 /// eg:当发生页面重载或者新页面时候，调用
 /// @param pageName 页面名称
 - (void)queryNudgesWithPageName:(NSString *)pageName;
-
-/// eg: 根据类型展示不同的nudges
-/// @param model 数据 <NudgesModel *>
-- (void)showNudgesView:(NudgesModel *)model;
 
 /// eg:展示下一个Nudges
 - (void)showNextNudges;
@@ -115,6 +109,12 @@ NS_ASSUME_NONNULL_BEGIN
 // comments:反馈备注
 // feedbackDuration:反馈时长（从Nudge展示到点击提交的市场）
 - (void)nudgesFeedBackWithNudgesId:(NSInteger)nudgesId contactId:(NSString *)contactId score:(NSString *)score thumbResult:(NSString *)thumbResult options:(NSString *)options comments:(NSString *)comments feedbackDuration:(NSString *)feedbackDuration;
+
+// 预览nudges
+- (void)previewConstructsNudgesViewByFindView:(UIView *)findView isFindType:(KNudgeFindType)type;
+
+// 查找nudges
+- (void)startConstructsNudgesViewByFindView:(UIView *)findView isFindType:(KNudgeFindType)type;
 
 @end
 

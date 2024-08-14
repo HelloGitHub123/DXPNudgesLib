@@ -27,11 +27,6 @@
 #import <DXPToolsLib/SNAlertMessage.h>
 #import "NdIMDBManager.h"
 
-#if __has_include(<React/RCTRootView.h>)
-#import <React/RCTRootView.h>
-#import <React/RCTView.h>
-#endif
-
 static HJNudgesManager *manager = nil;
 
 @interface HJNudgesManager ()<ToolTipsEventDelegate, SpotlightEventDelegate, PomoTagEventDelegate, HotSpotEventDelegate, AnnouncementEventDelegate, FloatingAtionEventDelegate, NPSEventDelegate, RateEventDelegate, FeedBackEventDelegate> {
@@ -45,6 +40,9 @@ static HJNudgesManager *manager = nil;
 @property (nonatomic, assign) BOOL isFindView; // 是否查找到对应的视图
 @property (nonatomic, assign) BOOL isReq; // nudges list 是否请求。 防重复请求
 @property (nonatomic, assign) BOOL sessionFlag; // 每次重新打开会话
+
+@property (nonatomic, strong) NudgesModel *currentModel; //
+@property (nonatomic, strong) NudgesBaseModel *currentBaseModel; //
 @end
 
 @implementation HJNudgesManager
@@ -73,6 +71,8 @@ static HJNudgesManager *manager = nil;
 // 数据初始化
 - (void)initData {
   self.sessionFlag = YES;
+  self.domTreeDic = @{};
+  self.configParametersModel = [[NudgesConfigParametersModel alloc] init];
   self.nudgesShowList = [[NSMutableArray alloc] init];
   self.showList = [[NSMutableArray alloc] init];
   self.isReq = false;
@@ -143,9 +143,9 @@ static HJNudgesManager *manager = nil;
 // 点击Capture按钮时候触发
 - (void)captureClickAction {
   UIImage *img = [self currentWindowScreenShot];
-  // 获取当前viewController的domTree
-  NSDictionary *dic = [self getWindowDomTree];
-  [self uploadCaptureInfoByScreenShotImg:img domTree:dic permission:@"true"];
+  self.screenShotImg = img;
+  // 发送通知到RN
+  [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"getWindowDomTree"}];
 }
 
 // websocket上报截屏和树形结构信息
@@ -265,7 +265,7 @@ static HJNudgesManager *manager = nil;
           FrequencyModel *fModel = [[FrequencyModel alloc] initWithMsgDic:frequencyDic];
           self.frequencyModel = fModel;
         }
-       
+        
         NSArray *contactList = [resDic objectForKey:@"contactList"];
         // 判断是否满足条件
         if (IsArrEmpty_Nd(contactList) || ![self checkGlobalFrequency]) {
@@ -281,9 +281,9 @@ static HJNudgesManager *manager = nil;
         for (int i = 0; i< contactList.count; i++) {
           NSDictionary *dic = [contactList objectAtIndex:i];
           NSString *pageName = [dic objectForKey:@"pageName"];
-//          if ([[pageName lowercaseString] containsString:@"viewcontroller"]) {
-//            [self.nudgesShowList addObject:dic];
-//          }
+          //          if ([[pageName lowercaseString] containsString:@"viewcontroller"]) {
+          //            [self.nudgesShowList addObject:dic];
+          //          }
           if ([pageName isEqualToString:self.currentPageName]) {
             [self.nudgesShowList addObject:dic];
           }
@@ -448,111 +448,98 @@ static HJNudgesManager *manager = nil;
   // 解析构造
   NudgesModel *model = [[NudgesModel alloc] initWithMsgDic:dic];
   model.remainTimes = 1; // 预览默认给一次
+  self.currentModel = model;
+  
   NudgesBaseModel *baseModel = [[NudgesBaseModel alloc] initWithMsgModel:model];
-
+  self.currentBaseModel = baseModel;
   // 检查是否存在当前页面
-  CheckNudgeModel *checkModel = [self checkNudgesViewExist:model];
-  // 类型匹配进行，显示
-  if ([[dic objectForKey:@"nudgesType"] longValue] == KNudgesType_Hotspots) {
-    [HJHotSpotManager sharedInstance].nudgesModel = model;
-    [HJHotSpotManager sharedInstance].baseModel = baseModel;
-    [HJHotSpotManager sharedInstance].delegate = self;
-    
-  } else if ([[dic objectForKey:@"nudgesType"] longValue] == KNudgesType_FunnelReminders) {
-    [HJAnnouncementManager sharedInstance].nudgesModel = model;
-    [HJAnnouncementManager sharedInstance].baseModel = baseModel;
-    [HJAnnouncementManager sharedInstance].delegate = self;
-    
-  } else if ([[dic objectForKey:@"nudgesType"] longValue] == KNudgesType_SpotLight) {
-    if (checkModel.isFindType == KNudgeFineType_Exist_Find) {
-      [HJSpotlightManager sharedInstance].nudgesModel = model;
-      [HJSpotlightManager sharedInstance].baseModel = baseModel;
-      [HJSpotlightManager sharedInstance].findView = checkModel.findView;
-      [HJSpotlightManager sharedInstance].delegate = self;
-      // 开始显示
-      [[HJSpotlightManager sharedInstance] startConstructsNudgesView];
-    }
-    
-  } else if ([[dic objectForKey:@"nudgesType"] longValue] == KNudgesType_FOMOTags) {
-    if (checkModel.isFindType == KNudgeFineType_Exist_Find) {
-      [HJPomoTagManager sharedInstance].nudgesModel = model;
-      [HJPomoTagManager sharedInstance].baseModel = baseModel;
-      [HJPomoTagManager sharedInstance].findView = checkModel.findView;
-      [HJPomoTagManager sharedInstance].delegate = self;
-      // 开始显示
-      [[HJPomoTagManager sharedInstance] startConstructsNudgesView];
-    }
-    
-  } else if ([[dic objectForKey:@"nudgesType"] longValue] == KNudgesType_FloatingActions) {
-    
-    [HJFloatingAtionManager sharedInstance].nudgesModel = model;
-    [HJFloatingAtionManager sharedInstance].baseModel = baseModel;
-    [HJFloatingAtionManager sharedInstance].delegate = self;
-    
-  } else if ([[dic objectForKey:@"nudgesType"] longValue] == KNudgesType_NPS) {
-    [HJNPSManager sharedInstance].nudgesModel = model;
-    [HJNPSManager sharedInstance].baseModel = baseModel;
-    [HJNPSManager sharedInstance].delegate = self;
-    
-  } else if ([[dic objectForKey:@"nudgesType"] longValue] == KNudgesType_Rate) {
-    [HJRateManager sharedInstance].nudgesModel = model;
-    [HJRateManager sharedInstance].baseModel = baseModel;
-    [HJRateManager sharedInstance].delegate = self;
-    
-  } else if ([[dic objectForKey:@"nudgesType"] longValue] == KNudgesType_Forms) {
-    [HJFeedBackManager sharedInstance].nudgesModel = model;
-    [HJFeedBackManager sharedInstance].baseModel = baseModel;
-    [HJFeedBackManager sharedInstance].delegate = self;
-  } else if ([[dic objectForKey:@"nudgesType"] longValue] == KNudgesType_Tooltips) {
-    if (checkModel.isFindType == KNudgeFineType_Exist_Find) {
-      [HJToolTipsManager sharedInstance].nudgesModel = model;
-      [HJToolTipsManager sharedInstance].baseModel = baseModel;
-      [HJToolTipsManager sharedInstance].findView = checkModel.findView;
-      [HJToolTipsManager sharedInstance].delegate = self;
-      // 开始显示
-      [[HJToolTipsManager sharedInstance] startConstructsNudgesView];
-    }
-  }
-  else {
-    // toolTips
-    if (checkModel.isFindType == KNudgeFineType_Exist_Find) {
-      [HJToolTipsManager sharedInstance].nudgesModel = model;
-      [HJToolTipsManager sharedInstance].baseModel = baseModel;
-      [HJToolTipsManager sharedInstance].findView = checkModel.findView;
-      [HJToolTipsManager sharedInstance].delegate = self;
-      // 开始显示
-      [[HJToolTipsManager sharedInstance] startConstructsNudgesView];
+  [self checkNudgesViewExist:model isPreview:YES];
+}
+
+#pragma mark -- 预览nudges
+- (void)previewConstructsNudgesViewByFindView:(UIView *)findView isFindType:(KNudgeFindType)type {
+  if (type == KNudgeFineType_Exist_Find) {
+    // 类型匹配进行，显示
+    switch (self.currentModel.nudgesType) {
+      case KNudgesType_Hotspots: {
+        [HJHotSpotManager sharedInstance].nudgesModel = self.currentModel;
+        [HJHotSpotManager sharedInstance].baseModel = self.currentBaseModel;
+        [HJHotSpotManager sharedInstance].delegate = self;
+      }
+        break;
+      case KNudgesType_FunnelReminders: {
+        [HJAnnouncementManager sharedInstance].nudgesModel = self.currentModel;
+        [HJAnnouncementManager sharedInstance].baseModel = self.currentBaseModel;
+        [HJAnnouncementManager sharedInstance].delegate = self;
+      }
+        break;
+      case KNudgesType_SpotLight: {
+        [HJSpotlightManager sharedInstance].nudgesModel = self.currentModel;
+        [HJSpotlightManager sharedInstance].baseModel =  self.currentBaseModel;
+        [HJSpotlightManager sharedInstance].findView = findView;
+        [HJSpotlightManager sharedInstance].delegate = self;
+        // 开始显示
+        [[HJSpotlightManager sharedInstance] startConstructsNudgesView];
+      }
+        break;
+      case KNudgesType_FOMOTags: {
+        [HJPomoTagManager sharedInstance].nudgesModel = self.currentModel;
+        [HJPomoTagManager sharedInstance].baseModel = self.currentBaseModel;
+        [HJPomoTagManager sharedInstance].findView = findView;
+        [HJPomoTagManager sharedInstance].delegate = self;
+        // 开始显示
+        [[HJPomoTagManager sharedInstance] startConstructsNudgesView];
+      }
+        break;
+      case KNudgesType_FloatingActions: {
+        [HJFloatingAtionManager sharedInstance].nudgesModel = self.currentModel;
+        [HJFloatingAtionManager sharedInstance].baseModel = self.currentBaseModel;
+        [HJFloatingAtionManager sharedInstance].delegate = self;
+      }
+        break;
+      case KNudgesType_NPS: {
+        [HJNPSManager sharedInstance].nudgesModel = self.currentModel;
+        [HJNPSManager sharedInstance].baseModel = self.currentBaseModel;
+        [HJNPSManager sharedInstance].delegate = self;
+      }
+        break;
+      case KNudgesType_Rate: {
+        [HJRateManager sharedInstance].nudgesModel = self.currentModel;
+        [HJRateManager sharedInstance].baseModel = self.currentBaseModel;
+        [HJRateManager sharedInstance].delegate = self;
+      }
+        break;
+      case KNudgesType_Forms: {
+        [HJFeedBackManager sharedInstance].nudgesModel = self.currentModel;
+        [HJFeedBackManager sharedInstance].baseModel = self.currentBaseModel;
+        [HJFeedBackManager sharedInstance].delegate = self;
+      }
+        break;
+      case KNudgesType_Tooltips: {
+        [HJToolTipsManager sharedInstance].nudgesModel = self.currentModel;
+        [HJToolTipsManager sharedInstance].baseModel = self.currentBaseModel;
+        [HJToolTipsManager sharedInstance].findView = findView;
+        [HJToolTipsManager sharedInstance].delegate = self;
+        // 开始显示
+        [[HJToolTipsManager sharedInstance] startConstructsNudgesView];
+      }
+        break;
+      default: {
+        [HJToolTipsManager sharedInstance].nudgesModel = self.currentModel;
+        [HJToolTipsManager sharedInstance].baseModel = self.currentBaseModel;
+        [HJToolTipsManager sharedInstance].findView = findView;
+        [HJToolTipsManager sharedInstance].delegate = self;
+        // 开始显示
+        [[HJToolTipsManager sharedInstance] startConstructsNudgesView];
+      }
+        break;
     }
   }
 }
 
-#pragma mark -- 查找对应的view(RN)
-#if __has_include(<React/RCTRootView.h>)
-- (void)getRNViewForVC:(UIViewController *)rnViewController subView:(RCTView *)subView startTag:(NSString *)indexStr accessibility:(NSString *)accessibility block:(void (^)(RCTView *rctView))block {
-  
-  NSString *className = NSStringFromClass([subView class]);
-  NSString *tagStr = [NSString stringWithFormat:@"RN_%@_%@",className,indexStr];
-  if ([tagStr isEqualToString:accessibility] && block) {
-    block(subView);
-  }
-  // 修改findindex为元素标识
-  subView.isAccessibilityElement = YES;
-  subView.superview.isAccessibilityElement = YES;
-  
-  NSMutableString * str = [NSMutableString string];
-  [str appendString:indexStr];
-  // 4.遍历所有的子控件
-  for (int i =0; i<subView.subviews.count; i++) {
-    RCTView *child = subView.subviews[i];
-    [self getRNViewForVC:rnViewController subView:child startTag:[NSString stringWithFormat:@"%@%@%d",indexStr,isEmptyString_Nd(indexStr)?@"":@",",i] accessibility:accessibility block:block];
-  }
-}
-#endif
 
 #pragma mark -- 查询对应页面上的nudges，并展示 (RunTime 会实时调用该方法)
 - (void)queryNudgesWithPageName:(NSString *)pageName {
-  // 判断RN
-#if __has_include(<React/RCTRootView.h>)
   if (isEmptyString_Nd(self.currentPageName)) {
     return;
   }
@@ -560,43 +547,41 @@ static HJNudgesManager *manager = nil;
   self.nIndex = 0;
   [self showNudgesViewWithPageName:self.currentPageName];
   
-#else
-  if (isEmptyString_Nd(pageName)) {
-    return;
-  }
-  // 1.判断当前界面pageName 有没有发生跳转，
-  // 如果发生跳转，则重新从数据库拿下一个界面数据，并更新当前缓存数据。
-  // 如果没有跳转，还是当前页面，则还从缓存中拿数据进行展示
-  // 2. 判断当前界面nudge有没有，并且判断有没有展示。 用到索引nIndex，用来记录展示的nudges的index
-  //   1>.当前界面有，但是没有显示出来 — 寻找下一个当前界面nudges
-  //   2>.当前界面有，并且显示出来了   —  寻找下一个当前界面nudegs
-  //   3>. 当前界面没有包含该元素     —  不寻找，并且删除当前数据。并寻找下一个当前界面nudegs
+  //  if (isEmptyString_Nd(pageName)) {
+  //    return;
+  //  }
+  //  // 1.判断当前界面pageName 有没有发生跳转，
+  //  // 如果发生跳转，则重新从数据库拿下一个界面数据，并更新当前缓存数据。
+  //  // 如果没有跳转，还是当前页面，则还从缓存中拿数据进行展示
+  //  // 2. 判断当前界面nudge有没有，并且判断有没有展示。 用到索引nIndex，用来记录展示的nudges的index
+  //  //   1>.当前界面有，但是没有显示出来 — 寻找下一个当前界面nudges
+  //  //   2>.当前界面有，并且显示出来了   —  寻找下一个当前界面nudegs
+  //  //   3>. 当前界面没有包含该元素     —  不寻找，并且删除当前数据。并寻找下一个当前界面nudegs
+  //
+  //  // 注:isReq 只有请求过contact/list 才可以进行查找
+  //  //    isReq = YES; self.isLock= NO;
+  //  if (self.isReq && !self.isLock) {
+  //    self.isLock = YES; // 进行访问锁定
+  //
+  //    if (isEmptyString_Nd(self.currentPageName)) {
+  //      self.currentPageName = pageName;
+  //    }
+  //    if ([pageName isEqualToString:self.currentPageName]) {
+  //      [self showNudgesViewWithPageName:self.currentPageName];
+  //    } else {
+  //      // 界面发生变化 更新当前页面的变量
+  //      self.isLock = NO;
+  //      self.nIndex = 0;
+  //      self.currentPageName = pageName;
+  //      [self showNudgesViewWithPageName:self.currentPageName];
+  //    }
+  //  }
   
-  // 注:isReq 只有请求过contact/list 才可以进行查找
-  //    isReq = YES; self.isLock= NO;
-  if (self.isReq && !self.isLock) {
-    self.isLock = YES; // 进行访问锁定
-    
-    if (isEmptyString_Nd(self.currentPageName)) {
-      self.currentPageName = pageName;
-    }
-    if ([pageName isEqualToString:self.currentPageName]) {
-      [self showNudgesViewWithPageName:self.currentPageName];
-    } else {
-      // 界面发生变化 更新当前页面的变量
-      self.isLock = NO;
-      self.nIndex = 0;
-      self.currentPageName = pageName;
-      [self showNudgesViewWithPageName:self.currentPageName];
-    }
-  }
-#endif
 }
 
 // nudges的显示逻辑
 - (void)showNudgesViewWithPageName:(NSString *)pageName {
   // 界面没有发生跳转,从缓存中拿数据进行展示
-  //            if (IsArrEmpty(self.showList)) {
   NSMutableArray *nudgesList = [NdHJNudgesDBManager selectNudgesDBWithPageName:pageName];
   if (IsArrEmpty_Nd(nudgesList)) {
     self.isLock = NO;
@@ -604,7 +589,6 @@ static HJNudgesManager *manager = nil;
   } else {
     self.showList = nudgesList;
   }
-  //            }
   // 展示逻辑：判断当前界面nudge有没有，并且判断有没有展示。 可能用到索引，用来记录展示的nudges的index
   if (self.showList.count <= self.nIndex) {
     self.isLock = NO;
@@ -614,9 +598,79 @@ static HJNudgesManager *manager = nil;
   }
   
   NudgesModel *nudgeModel = [self.showList objectAtIndex:self.nIndex];
-  //            KNudgeFindType findType = [self checkNudgesViewExist:mode];
-  CheckNudgeModel *model = [self checkNudgesViewExist:nudgeModel];
-  if (model.isFindType == KNudgeFineType_Exist_Find) {
+  self.currentModel = nudgeModel;
+  // 检查是否存在当前页面
+  [self checkNudgesViewExist:nudgeModel isPreview:NO];
+}
+
+#pragma mark -- 检查对应的view是否存在
+- (void)checkNudgesViewExist:(NudgesModel *)nudgesModel isPreview:(BOOL)isPreview {
+  if (!nudgesModel) {
+    return;
+  }
+  NudgesBaseModel *baseModel = [[NudgesBaseModel alloc] initWithMsgModel:nudgesModel];
+  NSString *accessibilityIdentifier = baseModel.appExtInfoModel.accessibilityIdentifier;
+  if (!isEmptyString_Nd(accessibilityIdentifier)) {
+    // 判断是RN的VC还是原生的VC
+    if ([baseModel.pageName isEqualToString:self.currentPageName]) {
+      // 发送通知到RN 查找指定的RCTView
+      [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"searchRNView",@"body":@{@"accessibility":accessibilityIdentifier,@"isPreview":@(isPreview)}}];
+    }
+  }
+}
+
+//- (CheckNudgeModel *)checkNudgesViewExist:(NudgesModel *)nudgesModel {
+//  if (!nudgesModel) {
+//    return nil;
+//  }
+//  NudgesBaseModel *baseModel = [[NudgesBaseModel alloc] initWithMsgModel:nudgesModel];
+//  CheckNudgeModel *model = [self checkNudgesViewExistByNudgesBaseModel:baseModel];
+//  return model;
+//}
+//
+//- (CheckNudgeModel *)checkNudgesViewExistByNudgesBaseModel:(NudgesBaseModel *)baseModel {
+//  if (!baseModel) {
+//    return nil;
+//  }
+//  CheckNudgeModel *model = [[CheckNudgeModel alloc] init];
+//  NSString *accessibilityIdentifier = baseModel.appExtInfoModel.accessibilityIdentifier;
+//  if (!isEmptyString_Nd(accessibilityIdentifier)) {
+//    // 判断是RN的VC还是原生的VC
+//    if ([baseModel.pageName isEqualToString:self.currentPageName]) {
+//      // 发送通知到RN 查找指定的RCTView
+//      [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"searchRNView",@"body":@{@"accessibility":accessibilityIdentifier}}];
+//
+//      // RN
+////      RCTRootView *rootView =(RCTRootView *)([TKUtils topViewController]).view;
+//      [self getRNViewForVC:[TKUtils topViewController] subView:(RCTView *)rootView startTag:@"" accessibility:accessibilityIdentifier block:^(RCTView *rctView) {
+//        // 取出对应节点的node
+//        UIView *view = rctView;
+//        model.findView = view;
+//        // 判断当前view是否在屏幕中
+//        BOOL isExist = [TKUtils isDisplayedInScreen:view];
+//        if (isExist && view) {
+//          NSLog(@"当前界面有，查找到了");
+//          KNudgeFindType isFindType = KNudgeFineType_Exist_Find;
+//          model.isFindType = isFindType;
+//        } else  if (view && !isExist) {
+//          NSLog(@"当前界面有，但是没有查找到了");
+//          KNudgeFindType isFindType = KNudgeFineType_Exist_NoFind;
+//          model.isFindType = isFindType;
+//        } else if (!isExist && !view) {
+//          NSLog(@"当前界面既没有，也没有查找到");
+//          KNudgeFindType isFindType = KNudgeFineType_NoExist_NoFind;
+//          model.isFindType = isFindType;
+//        }
+//      }];
+//    }
+//  }
+//  return model;
+//}
+
+
+#pragma mark -- 非预览情况
+- (void)startConstructsNudgesViewByFindView:(UIView *)findView isFindType:(KNudgeFindType)type {
+  if (type == KNudgeFineType_Exist_Find) {
     // 1.展示对应的nudges。
     // [self constructsNudgesViewData:baseModel view:view];
     // 2. 等这个nudge 移除后
@@ -624,20 +678,20 @@ static HJNudgesManager *manager = nil;
     // 设置 isLock = NO;
     // self.nIndex = 0
     // 调用 showNextNudges 方法进行下一个nudge 展示
-    [self selectNudgesDBWithPageName:nudgeModel UIView:model.findView];
+    [self selectNudgesDBWithPageName:self.currentModel UIView:findView];
     return;
-  } else if (model.isFindType == KNudgeFineType_NoExist_NoFind) {
+  } else if (type == KNudgeFineType_NoExist_NoFind) {
     // 1. 直接更新nudge的状态为展示过了
     // 注意，要判断当前nudge是不是该页面最后一个nudeg
     // 2. 设置 isLock = NO;
     // 3. self.nIndex = 0
     // 调用 showNextNudges 方法进行下一个nudge 展示
-    if (nudgeModel) {
-      [NdHJNudgesDBManager updateNudgesIsShowWithNudgesId:nudgeModel.nudgesId model:nudgeModel];
+    if (self.currentModel) {
+      [NdHJNudgesDBManager updateNudgesIsShowWithNudgesId:self.currentModel.nudgesId model:self.currentModel];
     }
     [self showNextNudges];
     return;
-  } else if (model.isFindType == KNudgeFineType_Exist_NoFind) {
+  } else if (type == KNudgeFineType_Exist_NoFind) {
     // 注意，要判断当前nudge是不是该页面最后一个nudeg
     // 1. 判断当前nudge 是不是该页面最后一个，
     // 如果是，则停止调用(不掉) showNextNudges 方法
@@ -661,118 +715,17 @@ static HJNudgesManager *manager = nil;
     return;
   } else {
     // feed back
-    if (nudgeModel.nudgesType == KNudgesType_NPS) {
-      [self selectNudgesDBWithPageName:nudgeModel UIView:nil];
+    if (self.currentModel.nudgesType == KNudgesType_NPS) {
+      [self selectNudgesDBWithPageName:self.currentModel UIView:nil];
     }
-    if (nudgeModel.nudgesType == KNudgesType_Rate) {
-      [self selectNudgesDBWithPageName:nudgeModel UIView:nil];
+    if (self.currentModel.nudgesType == KNudgesType_Rate) {
+      [self selectNudgesDBWithPageName:self.currentModel UIView:nil];
     }
-    if (nudgeModel.nudgesType == KNudgesType_Forms) {
-      [self selectNudgesDBWithPageName:nudgeModel UIView:nil];
+    if (self.currentModel.nudgesType == KNudgesType_Forms) {
+      [self selectNudgesDBWithPageName:self.currentModel UIView:nil];
     }
-    if (nudgeModel.nudgesType == KNudgesType_FunnelReminders) {
-      [self selectNudgesDBWithPageName:nudgeModel UIView:nil];
-    }
-  }
-}
-
-#pragma mark -- 检查对应的view是否存在
-- (CheckNudgeModel *)checkNudgesViewExist:(NudgesModel *)nudgesModel {
-  if (!nudgesModel) {
-    return nil;
-  }
-  NudgesBaseModel *baseModel = [[NudgesBaseModel alloc] initWithMsgModel:nudgesModel];
-  CheckNudgeModel *model = [self checkNudgesViewExistByNudgesBaseModel:baseModel];
-  return model;
-}
-
-- (CheckNudgeModel *)checkNudgesViewExistByNudgesBaseModel:(NudgesBaseModel *)baseModel {
-  if (!baseModel) {
-    return nil;
-  }
-  CheckNudgeModel *model = [[CheckNudgeModel alloc] init];
-  NSString *accessibilityIdentifier = baseModel.appExtInfoModel.accessibilityIdentifier;
-  if (!isEmptyString_Nd(accessibilityIdentifier)) {
-    // 判断是RN的VC还是原生的VC
-    if ([baseModel.pageName isEqualToString:self.currentPageName]) {
-      // RN
-#if __has_include(<React/RCTRootView.h>)
-      RCTRootView *rootView =(RCTRootView *)([TKUtils topViewController]).view;
-      [self getRNViewForVC:[TKUtils topViewController] subView:(RCTView *)rootView startTag:@"" accessibility:accessibilityIdentifier block:^(RCTView *rctView) {
-        // 取出对应节点的node
-        UIView *view = rctView;
-        model.findView = view;
-        // 判断当前view是否在屏幕中
-        BOOL isExist = [TKUtils isDisplayedInScreen:view];
-        if (isExist && view) {
-          NSLog(@"当前界面有，查找到了");
-          KNudgeFindType isFindType = KNudgeFineType_Exist_Find;
-          model.isFindType = isFindType;
-        } else  if (view && !isExist) {
-          NSLog(@"当前界面有，但是没有查找到了");
-          KNudgeFindType isFindType = KNudgeFineType_Exist_NoFind;
-          model.isFindType = isFindType;
-        } else if (!isExist && !view) {
-          NSLog(@"当前界面既没有，也没有查找到");
-          KNudgeFindType isFindType = KNudgeFineType_NoExist_NoFind;
-          model.isFindType = isFindType;
-        }
-      }];
-#endif
-    } else {
-      // 原生 获取window 的nodel
-      UIViewController *VC = [TKUtils topViewController];
-      NodeModel *nodel = [[NdHJIntroductManager sharedManager] getWindowNode:[UIApplication sharedApplication].delegate.window inViewController:VC index:@""];
-      NSString *identifier = baseModel.appExtInfoModel.accessibilityIdentifier;
-      //    NSString *identifier = baseModel.appExtInfoModel.accessibilityLabel;
-      NSString *stringWithoutSpace = [identifier stringByReplacingOccurrencesOfString:@" " withString:@""];
-      stringWithoutSpace = [stringWithoutSpace stringByReplacingOccurrencesOfString:@"\n" withString:@""];
-      stringWithoutSpace = [stringWithoutSpace stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-      
-      [self getViewNodeModelByAccessibilityElement:stringWithoutSpace targetView:nodel isFind:NO  block:^(NodeModel *nodel) {
-        
-        // 取出对应节点的node
-        UIView *view = nodel.targetView;
-        model.findView = view;
-        // 判断当前view是否在屏幕中
-        BOOL isExist = [TKUtils isDisplayedInScreen:view];
-        if (isExist && view) {
-          NSLog(@"当前界面有，查找到了");
-          KNudgeFindType isFindType = KNudgeFineType_Exist_Find;
-          model.isFindType = isFindType;
-        } else  if (view && !isExist) {
-          NSLog(@"当前界面有，但是没有查找到了");
-          KNudgeFindType isFindType = KNudgeFineType_Exist_NoFind;
-          model.isFindType = isFindType;
-        } else if (!isExist && !view) {
-          NSLog(@"当前界面既没有，也没有查找到");
-          KNudgeFindType isFindType = KNudgeFineType_NoExist_NoFind;
-          model.isFindType = isFindType;
-        }
-      }];
-    }
-  }
-  return model;
-}
-
-// 查找指定node下的view 节点
-- (void)getViewNodeModelByAccessibilityElement:(NSString *)AccessibilityElement targetView:(NodeModel *)nodel isFind:(BOOL)isFind block:(void (^)(NodeModel *nodel))block {
-  // 去除accessibilityIdentifier中的空字符串，因为服务器返回是没有空字符串的
-  NSString *stringWithoutSpace = [nodel.strAccessibilityIdentifier stringByReplacingOccurrencesOfString:@" " withString:@""];
-  stringWithoutSpace = [stringWithoutSpace stringByReplacingOccurrencesOfString:@"\n" withString:@""];
-  stringWithoutSpace = [stringWithoutSpace stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-  
-  if ([stringWithoutSpace isEqualToString:AccessibilityElement]) {
-    // NSLog(@"寻找到的节点accessibilityIdentifier---%@",AccessibilityElement);
-    !block?:block(nodel);
-    self.isFindView = YES;
-  }
-  for (NSInteger i = 0 ; i<[nodel.childNodeList count]; i++) {
-    NodeModel *childNodel = [nodel.childNodeList objectAtIndex:i];
-    if (!self.isFindView) {
-      [self getViewNodeModelByAccessibilityElement:AccessibilityElement targetView:childNodel isFind:isFind block:block];
-    } else {
-      return;
+    if (self.currentModel.nudgesType == KNudgesType_FunnelReminders) {
+      [self selectNudgesDBWithPageName:self.currentModel UIView:nil];
     }
   }
 }
@@ -782,6 +735,7 @@ static HJNudgesManager *manager = nil;
   if (model.nudgesType == KNudgesType_Tooltips) {
     // 如果是toolTips
     NudgesBaseModel *baseModel = [[NudgesBaseModel alloc] initWithMsgModel:model];
+    self.currentBaseModel = baseModel;
     // 数据库查找数据 (唯一性)
     NSMutableArray *nudgesList = [NdHJNudgesDBManager selectNudgesDBWithNudgesId:baseModel.nudgesId campaignId:baseModel.campaignId];
     if (IsArrEmpty_Nd(nudgesList)) {
@@ -1082,8 +1036,6 @@ static HJNudgesManager *manager = nil;
 /// @param italic 斜体
 /// @param weight 加粗量级
 - (UIFont *)SFDisplayFontWithSize:(CGFloat)fontSize familyName:(NSString *)familyName bold:(BOOL)bold itatic:(BOOL)italic weight:(UIFontWeight)weight  {
-  
-  //    UIFont *font = [UIFont systemFontOfSize:fontSize weight:weight];
   UIFont *font;
   if (isEmptyString_Nd(familyName)) {
     font = [UIFont systemFontOfSize:fontSize];
@@ -1147,72 +1099,6 @@ static HJNudgesManager *manager = nil;
   //    self.screenShotImageV = bgImgv;
   return image;
 }
-
-#pragma mark -- 获取树形结构信息(原生+RN)
-- (NSDictionary *)getWindowDomTree {
-  NSDictionary *dict = @{};
-  UIViewController *currentVC = [TKUtils topViewController];
-  // 判断页面是RN 还是 原生
-#if __has_include(<React/RCTRootView.h>)
-  // RN 工程有可能也有原生混合
-  if ([currentVC.view isKindOfClass:[RCTRootView class]]) {
-    NSLog(@"该视图属于RN-RCTRootView");
-    RCTRootView *rootView =(RCTRootView *)([TKUtils topViewController]).view;
-    dict = [self digRNViewDomTreeForVC:[TKUtils topViewController] subView:rootView startTag:@""];
-    NSLog(@"DomTree 数据：%@",dict);
-  } else {
-    NSLog(@"该视图属于UIView");
-    UIWindow *window = [[[UIApplication sharedApplication] delegate] window];
-    dict = [[NdHJIntroductManager sharedManager] digView:window inViewController:currentVC index:@""];
-    NSLog(@"DomTree 数据：%@",dict);
-  }
-#else
-  NSLog(@"该视图属于UIView");
-  UIWindow *window = [[[UIApplication sharedApplication] delegate] window];
-  dict = [[NdHJIntroductManager sharedManager] digView:window inViewController:currentVC index:@""];
-  NSLog(@"DomTree 数据：%@",dict);
-#endif
-  return dict;
-}
-
-#if __has_include(<React/RCTRootView.h>)
-#pragma mark -- 为RN View 每个元素都打上tag标签
-- (NSMutableDictionary *)digRNViewDomTreeForVC:(UIViewController *)rnViewController subView:(RCTView *)view startTag:(NSString *)indexStr {
-  // 1.初始化
-  NSMutableDictionary *dict = [[NSMutableDictionary alloc] init];
-  NSMutableArray *childArr = [[NSMutableArray alloc] init];
-    
-  [dict setObject:[NSString stringWithFormat:@"%ld",view.tag] forKey:@"tag"];
-  view.accessibilityLabel = [NSString stringWithFormat:@"RN_%@_%@",NSStringFromClass(view.class),indexStr];
-  [dict setObject:view.accessibilityLabel forKey:@"findIndex"];
-  [dict setObject:view.accessibilityLabel forKey:@"resId"];
-  [dict setObject:NSStringFromCGRect([self getAddress:view]) forKey:@"frame"];
-  [dict setObject:@"" forKey:@"className"];
-  //  [dict setObject:@"RNViewController" forKey:@"pageName"];
-  [dict setObject:self.currentPageName forKey:@"pageName"];
-  [dict setObject:view.accessibilityLabel forKey:@"accessibilityIdentifier"];
-  
-  // 修改findindex为元素标识
-  view.isAccessibilityElement = YES;
-  view.superview.isAccessibilityElement = YES;
-  
-  // 3.判断是否要结束
-  if (view.subviews.count == 0) {
-    return dict;
-  }
-  
-  NSMutableString * str = [NSMutableString string];
-  [str appendString:indexStr];
-  // 4.遍历所有的子控件
-  for (int i =0; i<view.subviews.count; i++) {
-    RCTView *child = view.subviews[i];
-    NSMutableDictionary *childDict = [self digRNViewDomTreeForVC:rnViewController subView:child startTag:[NSString stringWithFormat:@"%@%@%d",indexStr,isEmptyString_Nd(indexStr)?@"":@",",i]];
-    [childArr addObject:childDict];
-  }
-  [dict setObject:childArr forKey:@"childNodes"];
-  return dict;
-}
-#endif
 
 #pragma mark -- Other
 // 取设备型号
