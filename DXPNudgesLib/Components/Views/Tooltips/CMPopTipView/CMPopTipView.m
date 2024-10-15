@@ -25,6 +25,7 @@
 
 #import "CMPopTipView.h"
 #import <QuartzCore/QuartzCore.h>
+#import <DXPFontManagerLib/FontManager.h>
 
 @interface CMPopTipView ()
 {
@@ -768,7 +769,7 @@
 		_sidePadding = 2.0;
         _borderWidth = 1.0;
 
-		self.textFont = [UIFont boldSystemFontOfSize:14.0];
+		self.textFont = [FontManager setBoldFontSize:14.0];
 		self.textColor = [UIColor whiteColor];
 		self.textAlignment = NSTextAlignmentCenter;
 		self.backgroundColor = [UIColor colorWithRed:62.0/255.0 green:60.0/255.0 blue:154.0/255.0 alpha:1.0];
@@ -819,10 +820,10 @@
         self.title = titleToShow;
 		self.message = messageToShow;
 
-        self.titleFont = [UIFont boldSystemFontOfSize:16.0];
+        self.titleFont = [FontManager setBoldFontSize:16.0];
         self.titleColor = [UIColor whiteColor];
         self.titleAlignment = NSTextAlignmentCenter;
-        self.textFont = [UIFont systemFontOfSize:14.0];
+        self.textFont = [FontManager setNormalFontSize:14.0];
 		self.textColor = [UIColor whiteColor];
 	}
 	return self;

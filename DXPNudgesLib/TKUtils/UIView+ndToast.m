@@ -10,6 +10,7 @@
 #import <QuartzCore/QuartzCore.h>
 #import <objc/runtime.h>
 #import "Nudges.h"
+#import <DXPFontManagerLib/FontManager.h>
 /*
  *  CONFIGURE THESE VALUES TO ADJUST LOOK & FEEL,
  *  DISPLAY DURATION, ETC.
@@ -318,7 +319,7 @@ NSString * const CSNdToastPositionBottom          = @"bottom";
     if (title != nil) {
         titleLabel = [[UILabel alloc] init];
         titleLabel.numberOfLines = CSToastMaxTitleLines;
-        titleLabel.font = [UIFont boldSystemFontOfSize:CSToastFontSize];
+        titleLabel.font = [FontManager setBoldFontSize:CSToastFontSize];
         titleLabel.textAlignment = NSTextAlignmentLeft;
         titleLabel.lineBreakMode = NSLineBreakByWordWrapping;
         titleLabel.textColor = [UIColor whiteColor];
@@ -335,7 +336,7 @@ NSString * const CSNdToastPositionBottom          = @"bottom";
     if (message != nil) {
         messageLabel = [[UILabel alloc] init];
         messageLabel.numberOfLines = CSToastMaxMessageLines;
-        messageLabel.font = [UIFont systemFontOfSize:CSToastFontSize];
+        messageLabel.font = [FontManager setNormalFontSize:CSToastFontSize];
         messageLabel.lineBreakMode = NSLineBreakByWordWrapping;
         messageLabel.textColor = [UIColor whiteColor];
         messageLabel.backgroundColor = [UIColor clearColor];

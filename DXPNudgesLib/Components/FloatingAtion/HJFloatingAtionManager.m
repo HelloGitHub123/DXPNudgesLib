@@ -13,6 +13,7 @@
 #import "ZFUtilities.h"
 #import "HJNudgesManager.h"
 #import "SuspensionButton.h" //悬浮按钮
+#import <DXPFontManagerLib/FontManager.h>
 
 #define View_Spacing  10
 #define Button_height 43
@@ -143,8 +144,8 @@ static HJFloatingAtionManager *manager = nil;
         // 类型
         if (style.fillType == KButtonsFillType_TextOnley) {
             // 单文本
-            HJText *text = item.text;
-            CGSize size = [text.content sizeWithAttributes:@{NSFontAttributeName:[UIFont systemFontOfSize:(text.fontSize == 0)?14:text.fontSize]}];
+          HJText *text = item.text;
+          CGSize size = [text.content sizeWithAttributes:@{NSFontAttributeName:[FontManager setNormalFontSize:(text.fontSize == 0)?14:text.fontSize]}];
             CGFloat width = ceil(size.width); // 计算文本的宽度
             CGFloat height = ceil(size.height);
             [self.suspensionButton setTitle:isEmptyString_Nd(text.content)?@"":text.content forState:UIControlStateNormal];
@@ -210,7 +211,7 @@ static HJFloatingAtionManager *manager = nil;
         if (style.fillType == KButtonsFillType_IconText) {
             // 文本 + icon
             HJText *text = item.text;
-            CGSize size = [text.content sizeWithAttributes:@{NSFontAttributeName:[UIFont systemFontOfSize:(text.fontSize == 0)?14:text.fontSize]}];
+            CGSize size = [text.content sizeWithAttributes:@{NSFontAttributeName:[FontManager setNormalFontSize:(text.fontSize == 0)?14:text.fontSize]}];
             CGFloat width = ceil(size.width); // 计算文本的宽度
             CGFloat height = ceil(size.height);
             

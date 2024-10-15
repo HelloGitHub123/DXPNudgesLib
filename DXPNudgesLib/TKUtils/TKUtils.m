@@ -7,6 +7,7 @@
 
 #import "TKUtils.h"
 #import <sys/utsname.h>
+#import <DXPFontManagerLib/FontManager.h>
 
 @implementation TKUtils
 
@@ -62,7 +63,7 @@
 + (UIFont *)setButtonFontWithSize:(CGFloat)fontSize familyName:(NSString *)familyName bold:(BOOL)bold itatic:(BOOL)italic weight:(UIFontWeight)weight {
     UIFont *font;
     if (isEmptyString_Nd(familyName)) {
-        font = [UIFont systemFontOfSize:fontSize];
+        font = [FontManager setNormalFontSize:fontSize];
     } else {
         font = [UIFont fontWithName:familyName size:fontSize];
     }
@@ -84,7 +85,7 @@
     //    UIFont *font = [UIFont systemFontOfSize:fontSize weight:weight];
     UIFont *font;
     if (isEmptyString_Nd(familyName)) {
-        font = [UIFont systemFontOfSize:fontSize];
+        font = [FontManager setNormalFontSize:fontSize];
     } else {
         font = [UIFont fontWithName:familyName size:fontSize];
     }

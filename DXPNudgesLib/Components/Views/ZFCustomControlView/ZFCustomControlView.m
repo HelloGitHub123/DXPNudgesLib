@@ -14,6 +14,7 @@
 #import <ZFPlayer/ZFPlayerConst.h>
 #import "ZFSliderView.h"
 #import "UIImageView+ZFCache.h"
+#import <DXPFontManagerLib/FontManager.h>
 
 @interface ZFCustomControlView () <ZFSliderViewDelegate>
 
@@ -516,7 +517,7 @@
     if (!_titleLabel) {
         _titleLabel = [[UILabel alloc] init];
         _titleLabel.textColor = [UIColor whiteColor];
-        _titleLabel.font = [UIFont systemFontOfSize:15.0];
+        _titleLabel.font = [FontManager setNormalFontSize:15.0];
     }
     return _titleLabel;
 }
@@ -543,7 +544,7 @@
     if (!_currentTimeLabel) {
         _currentTimeLabel = [[UILabel alloc] init];
         _currentTimeLabel.textColor = [UIColor whiteColor];
-        _currentTimeLabel.font = [UIFont systemFontOfSize:14.0f];
+      _currentTimeLabel.font = [FontManager setNormalFontSize:14.0];
         _currentTimeLabel.textAlignment = NSTextAlignmentCenter;
     }
     return _currentTimeLabel;
@@ -566,7 +567,7 @@
     if (!_totalTimeLabel) {
         _totalTimeLabel = [[UILabel alloc] init];
         _totalTimeLabel.textColor = [UIColor whiteColor];
-        _totalTimeLabel.font = [UIFont systemFontOfSize:14.0f];
+      _totalTimeLabel.font = [FontManager setNormalFontSize:14.0];
         _totalTimeLabel.textAlignment = NSTextAlignmentCenter;
     }
     return _totalTimeLabel;

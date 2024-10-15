@@ -7,6 +7,7 @@
 //
 
 #import "GZFRadioCheckBox.h"
+#import <DXPFontManagerLib/FontManager.h>
 
 // radio button 的宽高
 #define kRadioButtonWidth 24
@@ -20,7 +21,7 @@
         self.index = nil;
         self.isHorizontal = YES;
         self.spacing = 10;
-        self.showTextFont = [UIFont systemFontOfSize:10];
+      self.showTextFont = [FontManager setNormalFontSize:10];
         self.showTextColor = [UIColor blackColor];
         self.hideMulitSelectArray = @[].mutableCopy;
     }

@@ -26,6 +26,7 @@
 #import <DXPToolsLib/HJTool.h>
 #import <DXPToolsLib/SNAlertMessage.h>
 #import "NdIMDBManager.h"
+#import <DXPFontManagerLib/FontManager.h>
 
 static HJNudgesManager *manager = nil;
 
@@ -1038,7 +1039,7 @@ static HJNudgesManager *manager = nil;
 - (UIFont *)SFDisplayFontWithSize:(CGFloat)fontSize familyName:(NSString *)familyName bold:(BOOL)bold itatic:(BOOL)italic weight:(UIFontWeight)weight  {
   UIFont *font;
   if (isEmptyString_Nd(familyName)) {
-    font = [UIFont systemFontOfSize:fontSize];
+    font = [FontManager setNormalFontSize:fontSize];
   } else {
     font = [UIFont fontWithName:familyName size:fontSize];
   }

@@ -6,6 +6,7 @@
 //
 
 #import "HJSliderView.h"
+#import <DXPFontManagerLib/FontManager.h>
 
 @interface NumberView : UIButton
 
@@ -177,7 +178,7 @@
         L_textColor = self.ownPropModel.leftText.color;
     }
     self.leftLab.textColor = [UIColor colorWithHexString:L_textColor];
-    self.leftLab.font = [UIFont systemFontOfSize:(self.ownPropModel.fontSize == 0 ? 12:self.ownPropModel.fontSize)];
+    self.leftLab.font = [FontManager setNormalFontSize:(self.ownPropModel.fontSize == 0 ? 12:self.ownPropModel.fontSize)];
     [_leftLab mas_makeConstraints:^(MASConstraintMaker *make) {
         make.leading.equalTo(self.mas_leading).offset(10);
         make.height.equalTo(@20);
@@ -196,7 +197,7 @@
         R_textColor = self.ownPropModel.rightText.color;
     }
     self.rightLab.textColor = [UIColor colorWithHexString:R_textColor];
-    self.rightLab.font = [UIFont systemFontOfSize:(self.ownPropModel.fontSize == 0 ?12:self.ownPropModel.fontSize)];
+    self.rightLab.font = [FontManager setNormalFontSize:(self.ownPropModel.fontSize == 0 ?12:self.ownPropModel.fontSize)];
     [_rightLab mas_makeConstraints:^(MASConstraintMaker *make) {
         make.trailing.equalTo(self.mas_trailing).offset(-10);
         make.height.equalTo(@20);

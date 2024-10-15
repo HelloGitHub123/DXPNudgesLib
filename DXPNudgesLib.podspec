@@ -16,7 +16,7 @@ Pod::Spec.new do |spec|
   #
 
   spec.name         = "DXPNudgesLib"
-  spec.version      = "1.0.4"
+  spec.version      = "1.0.5"
   spec.summary      = "DXP DXPNudgesLib."
 
   # This description is used to generate tags and improve search results.
@@ -118,7 +118,7 @@ Pod::Spec.new do |spec|
   # spec.framework  = "SomeFramework"
   # spec.frameworks = "SomeFramework", "AnotherFramework"
 
-
+    spec.dependency 'DXPFontManagerLib'
     spec.dependency 'SDWebImage'
     spec.dependency 'Masonry'
     spec.dependency 'MJExtension'

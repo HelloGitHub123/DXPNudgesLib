@@ -19,6 +19,7 @@
 #import "UIImage+SVGManager.h"
 #import "WKTextView.h"
 #import "GZFRadioCheckBox.h"
+#import <DXPFontManagerLib/FontManager.h>
 
 #define Padding_Spacing 10
 #define View_Spacing  10 // view 之间的间距
@@ -342,7 +343,7 @@ static HJFeedBackManager *manager = nil;
         dissButton.layer.cornerRadius = (iconSize+10)/2;
         [dissButton setTitle:@"X" forState:UIControlStateNormal];
         dissButton.titleEdgeInsets = UIEdgeInsetsMake(5, 5, 5, 5);
-        dissButton.titleLabel.font = [UIFont systemFontOfSize:iconSize];
+      dissButton.titleLabel.font = [FontManager setNormalFontSize:iconSize]; //[UIFont systemFontOfSize:iconSize];
         // 标题颜色
         UIColor *color = [UIColor whiteColor];
         if (!isEmptyString_Nd([UIColor colorWithHexString:baseModel.dismissButtonModel.iconStyle.iconColor])) {
