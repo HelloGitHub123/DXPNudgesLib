@@ -18,7 +18,7 @@
         self.accNbr = @"";
         self.channelCode = @"";
         self.adviceCode = @"";
-        self.appId = @"ditoapp";
+        self.appId = @"";
     }
     return self;
 }

@@ -1,6 +1,6 @@
 //
 //  HJNudgesManager.m
-//  DITOApp
+//  CLPApp
 //
 //  Created by 李标 on 2022/5/6.
 //
@@ -242,7 +242,7 @@ static HJNudgesManager *manager = nil;
   // 调接口获取nudges 列表
   NdHJHttpRequest *request = [[NdHJHttpRequest alloc] init];
   request.httpMethod = NdHJHttpMethodPOST;
-  NSString *reqUrl = [NSString stringWithFormat:@"%@nudges/contact",@"http://172.16.22.5:9110/portal-web/dmc/mccm-outer/"];
+  NSString *reqUrl = [NSString stringWithFormat:@"%@nudges/contact",model.baseUrl];
   request.requestUrl = reqUrl;
   request.requestParams = @{
     @"identityType": [NSNumber numberWithInt:(int)(model.identityType)],
@@ -433,7 +433,7 @@ static HJNudgesManager *manager = nil;
     @"accNbr":isEmptyString_Nd(self.configParametersModel.accNbr) ? @"" : self.configParametersModel.accNbr,
     @"random":[TKUtils uuidString],
     @"deviceToken":[self getDeviceUUID],
-    @"appId":@"ditoapp",
+    @"appId":self.configParametersModel.appId,
   };
   [[NdHJHttpSessionManager sharedInstance] sendRequest:request complete:^(NdHJHttpReponse * _Nonnull response) {
     if (!response.serverError) {
@@ -1015,7 +1015,7 @@ static HJNudgesManager *manager = nil;
     @"accNbr":isEmptyString_Nd(self.configParametersModel.accNbr) ? @"" : self.configParametersModel.accNbr,
     @"random":[TKUtils uuidString],
     @"deviceToken":[self getDeviceUUID],
-    @"appId":@"ditoapp",
+    @"appId":self.configParametersModel.appId,
     @"score":score,
     @"thumbResult":thumbResult,
     @"options":options,

@@ -17,6 +17,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, copy) NSString *socketURLStr;
 @property (nonatomic, copy) NSString *sysAccount;
 @property (nonatomic, copy) NSString *secretKey;
+@property (nonatomic, copy) NSString *sha1Key; // 加密key固定标识
 @property (nonatomic, copy) NSString *langCode;
 @property (nonatomic, copy) NSString *userId;
 

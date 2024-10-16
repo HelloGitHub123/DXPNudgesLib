@@ -1,6 +1,6 @@
 //
 //  HJNudgesManager.h
-//  DITOApp
+//  CLPApp
 //
 //  Created by 李标 on 2022/5/6.
 //  Nudges 管理大单例
