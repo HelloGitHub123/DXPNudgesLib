@@ -14,6 +14,7 @@
 #import <CommonCrypto/CommonCrypto.h>
 #import "NdIMClientChatUtil.h"
 #import "NdIMConfigSingleton.h"
+#import "HJNudgesManager.h"
 
 static NdHJHttpSessionManager *manager = nil;
 
@@ -65,7 +66,7 @@ static NdHJHttpSessionManager *manager = nil;
         NSLog(@"contentMd5:%@",contentMd5);
         NSString *timestamp = [TKUtils timestamp]; // 1662616998718
 //                NSString *timestamp = [NdIMClientChatUtil getNowGMTDateStr];
-        NSString *data = [NSString stringWithFormat:@"%@\n%@\n%@",[NdIMConfigSingleton sharedInstance].sha1Key,contentMd5,timestamp]; // hmacKey:@"MzUzOWQ2YzY4NjJmYWMzOWQ5ZGIxMjFm"]
+        NSString *data = [NSString stringWithFormat:@"%@\n%@\n%@",[HJNudgesManager sharedInstance].configParametersModel.appId,contentMd5,timestamp]; // hmacKey:@"MzUzOWQ2YzY4NjJmYWMzOWQ5ZGIxMjFm"]
         NSString *hmacSHA1Sign = [[[[NdIMClientChatUtil hmacSha1:data hmacKey:[NdIMConfigSingleton sharedInstance].secretKey] hexLower] dataUsingEncoding:NSUTF8StringEncoding] base64EncodedStringWithOptions:0];
 //                NSData *signatureData =[hmacSHA1Sign dataUsingEncoding:NSUTF8StringEncoding];
 //                NSLog(@"signatureData:%@",signatureData);
