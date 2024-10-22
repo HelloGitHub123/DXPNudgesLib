@@ -153,6 +153,16 @@ static HJToolTipsManager *manager = nil;
 	}
 }
 
+// 删除预览的nudges
+- (void)removePreviewNudges {
+  if ([self.visiblePopTipViews count] > 0) {
+    CMPopTipView *popTipView = [self.visiblePopTipViews objectAtIndex:0];
+    [popTipView dismissAnimated:YES];
+    [self.visiblePopTipViews removeObjectAtIndex:0];
+    [self stopCurrentPlayingView];
+  }
+}
+
 // 停止播放，并且移除播放器
 - (void)stopCurrentPlayingView {
 	if (self.player) {

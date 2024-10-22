@@ -157,6 +157,11 @@ static HJNPSManager *manager = nil;
     }
 }
 
+// 删除预览的nudges
+- (void)removePreviewNudges {
+  [self removeNudges];
+}
+
 - (void)showNudgesByWidth:(CGFloat)nWidth height:(CGFloat)nHeight {
     // 背景颜色，目前只支持实色
     CGFloat alpha = 1.0;

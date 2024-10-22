@@ -38,6 +38,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// eg: 移除对应的ToolTips
 - (void)removeNudges;
 
+// 删除预览的nudges
+- (void)removePreviewNudges;
+
 @end
 
 NS_ASSUME_NONNULL_END

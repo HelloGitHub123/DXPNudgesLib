@@ -40,6 +40,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 // eg:开始显示nudges
 - (void)startConstructsNudgesView;
+
+
+// 删除预览的nudges
+- (void)removePreviewNudges;
 @end
 
 NS_ASSUME_NONNULL_END

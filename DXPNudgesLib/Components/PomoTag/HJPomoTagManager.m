@@ -96,6 +96,17 @@ static HJPomoTagManager *manager = nil;
 	}
 }
 
+// 删除预览的nudges
+- (void)removePreviewNudges {
+  if ([self.visiblePopTipViews count] > 0) {
+    CMPopTipView *popTipView = [self.visiblePopTipViews objectAtIndex:0];
+    [popTipView dismissAnimated:YES];
+    [self.visiblePopTipViews removeObjectAtIndex:0];
+  }
+}
+
+
+
 #pragma mark -- 构造nudges数据
 - (void)startConstructsNudgesView {
 	if (self.baseModel && self.findView) {

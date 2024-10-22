@@ -35,6 +35,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) NudgesModel *nudgesModel;
 
 + (instancetype)sharedInstance;
+
+// 删除预览的nudges
+- (void)removePreviewNudges;
 @end
 
 NS_ASSUME_NONNULL_END

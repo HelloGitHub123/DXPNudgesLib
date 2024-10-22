@@ -116,6 +116,12 @@ NS_ASSUME_NONNULL_BEGIN
 // 查找nudges
 - (void)startConstructsNudgesViewByFindView:(UIView *)findView isFindType:(KNudgeFindType)type;
 
+/**
+ 打开Nudges
+ @param url   URL
+ */
+- (void)openNudgesUrl:(NSURL*)url;
+
 @end
 
 NS_ASSUME_NONNULL_END

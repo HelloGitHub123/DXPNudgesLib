@@ -141,6 +141,11 @@ static HJHotSpotManager *manager = nil;
     }
 }
 
+// 删除预览的nudges
+- (void)removePreviewNudges {
+  [self removeNudges];
+}
+
 // 停止播放，并且移除播放器
 - (void)stopCurrentPlayingView {
     if (self.player) {

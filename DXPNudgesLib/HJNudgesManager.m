@@ -446,6 +446,8 @@ static HJNudgesManager *manager = nil;
 - (void)showPreviewNudges:(NSDictionary *)dic {
   // 清空数据库数据
   [NdHJNudgesDBManager deleteTableAllDataForNudges];
+  // 查找对应预览的nudges
+  [self removeAllPreviewNudge];
   // 解析构造
   NudgesModel *model = [[NudgesModel alloc] initWithMsgDic:dic];
   model.remainTimes = 1; // 预览默认给一次
@@ -457,8 +459,25 @@ static HJNudgesManager *manager = nil;
   [self checkNudgesViewExist:model isPreview:YES];
 }
 
+// 查找对应预览的nudges，进行移除
+- (void)removeAllPreviewNudge {
+  [[HJHotSpotManager sharedInstance] removePreviewNudges];
+  [[HJAnnouncementManager sharedInstance] removePreviewNudges];
+  [[HJSpotlightManager sharedInstance] removePreviewNudges];
+  [[HJPomoTagManager sharedInstance] removePreviewNudges];
+  [[HJNPSManager sharedInstance] removePreviewNudges];
+  [[HJRateManager sharedInstance] removePreviewNudges];
+  [[HJFeedBackManager sharedInstance] removePreviewNudges];
+  [[HJToolTipsManager sharedInstance] removePreviewNudges];
+}
+
 #pragma mark -- 预览nudges
 - (void)previewConstructsNudgesViewByFindView:(UIView *)findView isFindType:(KNudgeFindType)type {
+  
+
+  [self removeAllPreviewNudge];
+  
+  
   if (type == KNudgeFineType_Exist_Find) {
     // 类型匹配进行，显示
     switch (self.currentModel.nudgesType) {
@@ -1266,6 +1285,92 @@ static HJNudgesManager *manager = nil;
   [comp1 month] == [comp2 month] &&
   [comp1 year]  == [comp2 year] &&
   [comp1 hour] == [comp2 hour];
+}
+
+#pragma mark -- 配对Nudge(URL Scheme)
+/**
+ 打开Nudges
+ @param url   URL
+ */
+- (void)openNudgesUrl:(NSURL*)url {
+    NSDictionary *dic = [self paramerWithURL:url];
+    
+    // 解析source
+    NSString *sourceVal = [dic objectForKey:@"source"];
+    [HJNudgesManager sharedInstance].sourceType = KSourceType_default;
+    if (!isEmptyString_Nd(sourceVal)) {
+      [HJNudgesManager sharedInstance].sourceType = KSourceType_ceg;
+    }
+    
+    // 解析matchcode
+    // nudges://match?matchcode={matchcode}
+    // nudges://match?matchcode=${obj.matchcode}&source=ceg
+    NSString *matchcodeVal = [dic objectForKey:@"matchcode"];
+    NSLog(@"matchcode:%@",matchcodeVal);
+    if (!isEmptyString_Nd(matchcodeVal)) {
+      // 上报设备信息 设备绑定
+      [[HJNudgesManager sharedInstance] uploadDeviceInfoWithMatchCode:matchcodeVal];
+    }
+    
+    // 解析configcode
+    // nudges://connect?configcode={configcode}
+    // nudges://connect?configcode=${obj.configcode}&source=ceg
+    NSString *configcodeVal = [dic objectForKey:@"configcode"];
+    NSLog(@"configcode:%@",configcodeVal);
+    if (!isEmptyString_Nd(configcodeVal)) {
+      // 上报设备信息 设备绑定   /mccm/nudges/socket
+      [[HJNudgesManager sharedInstance] connectWebSocketByConfigCode:configcodeVal];
+    }
+    
+    if ([url.absoluteString containsString:@"source="]) {
+      NSRange range = [url.absoluteString rangeOfString:@"source="];
+      if (range.location == NSNotFound) {
+      } else {
+        NSUInteger startIndex = range.location + range.length;
+        NSString *sourceCode = [url.absoluteString substringFromIndex:startIndex];
+        NSLog(@"sourceCode:%@",sourceCode);
+        [HJNudgesManager sharedInstance].sourceType = KSourceType_ceg;
+      }
+    }
+    
+//    nudges://match?matchcode={matchcode}
+//    nudges://match?matchcode=${obj.matchcode}&source=ceg
+    if ([url.absoluteString containsString:@"matchcode="]) {
+      NSRange range = [url.absoluteString rangeOfString:@"matchcode="];
+      if (range.location == NSNotFound) {
+      } else {
+        NSUInteger startIndex = range.location + range.length;
+        NSString *matchcode = [url.absoluteString substringFromIndex:startIndex];
+        NSLog(@"matchcode:%@",matchcode);
+        // 上报设备信息 设备绑定
+        [[HJNudgesManager sharedInstance] uploadDeviceInfoWithMatchCode:matchcode];
+      }
+    }
+    
+//    nudges://connect?configcode={configcode}
+//    nudges://connect?configcode=${obj.configcode}&source=ceg
+    if ([url.absoluteString containsString:@"configcode="]) {
+      NSRange range = [url.absoluteString rangeOfString:@"configcode="];
+      if (range.location == NSNotFound) {
+      } else {
+        NSUInteger startIndex = range.location + range.length;
+        NSString *configCode = [url.absoluteString substringFromIndex:startIndex];
+        NSLog(@"configCode:%@",configCode);
+        // 上报设备信息 设备绑定   /mccm/nudges/socket
+        [[HJNudgesManager sharedInstance] connectWebSocketByConfigCode:configCode];
+      }
+    }
+}
+
+- (NSDictionary *)paramerWithURL:(NSURL *) url {
+  NSMutableDictionary *paramer = [[NSMutableDictionary alloc]init];
+  //创建url组件类
+  NSURLComponents *urlComponents = [[NSURLComponents alloc] initWithString:url.absoluteString];
+  //遍历所有参数，添加入字典
+  [urlComponents.queryItems enumerateObjectsUsingBlock:^(NSURLQueryItem * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+    [paramer setObject:obj.value forKey:obj.name];
+  }];
+  return paramer;
 }
 
 @end
