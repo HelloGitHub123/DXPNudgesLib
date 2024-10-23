@@ -351,6 +351,11 @@ static HJPomoTagManager *manager = nil;
 	
 	// 显示后上报接口
 	[[HJNudgesManager sharedInstance] nudgesContactRespByNudgesId:baseModel.nudgesId contactId:baseModel.contactId];
+  
+  
+  // 发送通知给RN
+  [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"NudgesShowEvent",@"body":@{@"nudgesId":contactId,@"nudgesName":nudgesName,@"nudgesType":@(_baseModel.nudgesType),@"eventTypeId":@"onNudgesShow"}}];
+  
 	
 	[self.visiblePopTipViews addObject:popTipView];
 	

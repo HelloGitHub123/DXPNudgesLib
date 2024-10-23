@@ -904,22 +904,36 @@ static HJNudgesManager *manager = nil;
 
 #pragma mark -- ToolTipsEventDelegate
 // 按钮点击事件
-- (void)ToolTipsClickEventByType:(KButtonsUrlJumpType)jumpType Url:(NSString *)url {
-  if (_delegate && [_delegate conformsToProtocol:@protocol(NudgesEventDelegate)]) {
-    if (_delegate && [_delegate respondsToSelector:@selector(NudgesClickEventByType:jumpType:url:)]) {
-      [_delegate NudgesClickEventByType:KNudgesType_Tooltips jumpType:jumpType url:url];
-    }
-  }
+- (void)ToolTipsClickEventByType:(KButtonsUrlJumpType)jumpType Url:(NSString *)url invokeAction:(nonnull NSString *)invokeAction buttonName:(nonnull NSString *)buttonName model:(nonnull NudgesBaseModel *)model {
+//  if (_delegate && [_delegate conformsToProtocol:@protocol(NudgesEventDelegate)]) {
+//    if (_delegate && [_delegate respondsToSelector:@selector(NudgesClickEventByType:jumpType:url:)]) {
+//      [_delegate NudgesClickEventByType:KNudgesType_Tooltips jumpType:jumpType url:url];
+//    }
+//  }
+  
+//  nudgesId   nudgesName   nudgesType   buttonName   invokeAction   url  schemeType  eventTypeId
+  NSString *nudgesId = [NSString stringWithFormat:@"%ld",(long)model.nudgesId];
+  NSString *nudgesName = isEmptyString_Nd(model.nudgesName)?@"":model.nudgesName;
+  // 发送通知到RN
+  [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"ButtonClickEvent",@"body":@{@"nudgesId":nudgesId,@"nudgesName":nudgesName,@"nudgesType":@(model.nudgesType),@"buttonName":buttonName,@"invokeAction":invokeAction,@"url":url,@"schemeType":@(jumpType),@"eventTypeId":@"onNudgesButtonClick"}}];
+  
 }
 
 #pragma mark -- SpotlightEventDelegate
 // 按钮点击事件
-- (void)SpotlightClickEventByType:(KButtonsUrlJumpType)jumpType Url:(NSString *)url {
-  if (_delegate && [_delegate conformsToProtocol:@protocol(NudgesEventDelegate)]) {
-    if (_delegate && [_delegate respondsToSelector:@selector(NudgesClickEventByType:jumpType:url:)]) {
-      [_delegate NudgesClickEventByType:KNudgesType_SpotLight jumpType:jumpType url:url];
-    }
-  }
+- (void)SpotlightClickEventByType:(KButtonsUrlJumpType)jumpType Url:(NSString *)url invokeAction:(nonnull NSString *)invokeAction buttonName:(nonnull NSString *)buttonName model:(nonnull NudgesBaseModel *)model {
+  
+//  if (_delegate && [_delegate conformsToProtocol:@protocol(NudgesEventDelegate)]) {
+//    if (_delegate && [_delegate respondsToSelector:@selector(NudgesClickEventByType:jumpType:url:)]) {
+//      [_delegate NudgesClickEventByType:KNudgesType_SpotLight jumpType:jumpType url:url];
+//    }
+//  }
+  
+  NSString *nudgesId = [NSString stringWithFormat:@"%ld",(long)model.nudgesId];
+  NSString *nudgesName = isEmptyString_Nd(model.nudgesName)?@"":model.nudgesName;
+  // 发送通知到RN
+  [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"ButtonClickEvent",@"body":@{@"nudgesId":nudgesId,@"nudgesName":nudgesName,@"nudgesType":@(model.nudgesType),@"buttonName":buttonName,@"invokeAction":invokeAction,@"url":url,@"schemeType":@(jumpType),@"eventTypeId":@"onNudgesButtonClick"}}];
+  
 }
 
 #pragma mark -- PomoTagEventDelegate
@@ -934,30 +948,48 @@ static HJNudgesManager *manager = nil;
 
 #pragma mark -- HotSpotEventDelegate
 // 按钮点击事件
-- (void)HotSpotClickEventByType:(KButtonsUrlJumpType)jumpType Url:(NSString *)url {
-  if (_delegate && [_delegate conformsToProtocol:@protocol(HotSpotEventDelegate)]) {
-    if (_delegate && [_delegate respondsToSelector:@selector(NudgesClickEventByType:jumpType:url:)]) {
-      [_delegate NudgesClickEventByType:KNudgesType_Hotspots jumpType:jumpType url:url];
-    }
-  }
+- (void)HotSpotClickEventByType:(KButtonsUrlJumpType)jumpType Url:(NSString *)url invokeAction:(nonnull NSString *)invokeAction buttonName:(nonnull NSString *)buttonName model:(nonnull NudgesBaseModel *)model {
+//  if (_delegate && [_delegate conformsToProtocol:@protocol(HotSpotEventDelegate)]) {
+//    if (_delegate && [_delegate respondsToSelector:@selector(NudgesClickEventByType:jumpType:url:)]) {
+//      [_delegate NudgesClickEventByType:KNudgesType_Hotspots jumpType:jumpType url:url];
+//    }
+//  }
+  
+  NSString *nudgesId = [NSString stringWithFormat:@"%ld",(long)model.nudgesId];
+  NSString *nudgesName = isEmptyString_Nd(model.nudgesName)?@"":model.nudgesName;
+  // 发送通知到RN
+  [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"ButtonClickEvent",@"body":@{@"nudgesId":nudgesId,@"nudgesName":nudgesName,@"nudgesType":@(model.nudgesType),@"buttonName":buttonName,@"invokeAction":invokeAction,@"url":url,@"schemeType":@(jumpType),@"eventTypeId":@"onNudgesButtonClick"}}];
+  
 }
 
 #pragma mark -- FloatingAtionEventDelegate
-- (void)FloatingAtionClickEventByType:(KButtonsUrlJumpType)jumpType Url:(NSString *)url {
-  if (_delegate && [_delegate conformsToProtocol:@protocol(FloatingAtionEventDelegate)]) {
-    if (_delegate && [_delegate respondsToSelector:@selector(NudgesClickEventByType:jumpType:url:)]) {
-      [_delegate NudgesClickEventByType:KNudgesType_FloatingActions jumpType:jumpType url:url];
-    }
-  }
+- (void)FloatingAtionClickEventByType:(KButtonsUrlJumpType)jumpType Url:(NSString *)url invokeAction:(nonnull NSString *)invokeAction buttonName:(nonnull NSString *)buttonName model:(nonnull NudgesBaseModel *)model {
+//  if (_delegate && [_delegate conformsToProtocol:@protocol(FloatingAtionEventDelegate)]) {
+//    if (_delegate && [_delegate respondsToSelector:@selector(NudgesClickEventByType:jumpType:url:)]) {
+//      [_delegate NudgesClickEventByType:KNudgesType_FloatingActions jumpType:jumpType url:url];
+//    }
+//  }
+  
+  NSString *nudgesId = [NSString stringWithFormat:@"%ld",(long)model.nudgesId];
+  NSString *nudgesName = isEmptyString_Nd(model.nudgesName)?@"":model.nudgesName;
+  // 发送通知到RN
+  [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"ButtonClickEvent",@"body":@{@"nudgesId":nudgesId,@"nudgesName":nudgesName,@"nudgesType":@(model.nudgesType),@"buttonName":buttonName,@"invokeAction":invokeAction,@"url":url,@"schemeType":@(jumpType),@"eventTypeId":@"onNudgesButtonClick"}}];
+  
 }
 
 #pragma mark -- NPSEventDelegate
-- (void)NPSClickEventByType:(KButtonsUrlJumpType)jumpType Url:(NSString *)url {
-  if (_delegate && [_delegate conformsToProtocol:@protocol(NPSEventDelegate)]) {
-    if (_delegate && [_delegate respondsToSelector:@selector(NudgesClickEventByType:jumpType:url:)]) {
-      [_delegate NudgesClickEventByType:KNudgesType_NPS jumpType:jumpType url:url];
-    }
-  }
+- (void)NPSClickEventByType:(KButtonsUrlJumpType)jumpType Url:(NSString *)url invokeAction:(nonnull NSString *)invokeAction buttonName:(nonnull NSString *)buttonName model:(nonnull NudgesBaseModel *)model {
+//  if (_delegate && [_delegate conformsToProtocol:@protocol(NPSEventDelegate)]) {
+//    if (_delegate && [_delegate respondsToSelector:@selector(NudgesClickEventByType:jumpType:url:)]) {
+//      [_delegate NudgesClickEventByType:KNudgesType_NPS jumpType:jumpType url:url];
+//    }
+//  }
+  
+  NSString *nudgesId = [NSString stringWithFormat:@"%ld",(long)model.nudgesId];
+  NSString *nudgesName = isEmptyString_Nd(model.nudgesName)?@"":model.nudgesName;
+  // 发送通知到RN
+  [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"ButtonClickEvent",@"body":@{@"nudgesId":nudgesId,@"nudgesName":nudgesName,@"nudgesType":@(model.nudgesType),@"buttonName":buttonName,@"invokeAction":invokeAction,@"url":url,@"schemeType":@(jumpType),@"eventTypeId":@"onNudgesButtonClick"}}];
+
 }
 
 - (void)NPSSubmitByScore:(NSInteger)score {
@@ -969,21 +1001,32 @@ static HJNudgesManager *manager = nil;
 }
 
 #pragma mark -- FeedBackEventDelegate
-- (void)FeedBackClickEventByType:(KButtonsUrlJumpType)jumpType Url:(NSString *)url {
-  if (_delegate && [_delegate conformsToProtocol:@protocol(FeedBackEventDelegate)]) {
-    if (_delegate && [_delegate respondsToSelector:@selector(NudgesClickEventByType:jumpType:url:)]) {
-      [_delegate NudgesClickEventByType:KNudgesType_Forms jumpType:jumpType url:url];
-    }
-  }
+- (void)FeedBackClickEventByType:(KButtonsUrlJumpType)jumpType Url:(NSString *)url invokeAction:(nonnull NSString *)invokeAction buttonName:(nonnull NSString *)buttonName model:(nonnull NudgesBaseModel *)model {
+//  if (_delegate && [_delegate conformsToProtocol:@protocol(FeedBackEventDelegate)]) {
+//    if (_delegate && [_delegate respondsToSelector:@selector(NudgesClickEventByType:jumpType:url:)]) {
+//      [_delegate NudgesClickEventByType:KNudgesType_Forms jumpType:jumpType url:url];
+//    }
+//  }
+  
+  NSString *nudgesId = [NSString stringWithFormat:@"%ld",(long)model.nudgesId];
+  NSString *nudgesName = isEmptyString_Nd(model.nudgesName)?@"":model.nudgesName;
+  // 发送通知到RN
+  [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"ButtonClickEvent",@"body":@{@"nudgesId":nudgesId,@"nudgesName":nudgesName,@"nudgesType":@(model.nudgesType),@"buttonName":buttonName,@"invokeAction":invokeAction,@"url":url,@"schemeType":@(jumpType),@"eventTypeId":@"onNudgesButtonClick"}}];
+  
 }
 
 #pragma mark -- RateEventDelegate
-- (void)RateClickEventByType:(KButtonsUrlJumpType)jumpType Url:(NSString *)url {
-  if (_delegate && [_delegate conformsToProtocol:@protocol(RateEventDelegate)]) {
-    if (_delegate && [_delegate respondsToSelector:@selector(NudgesClickEventByType:jumpType:url:)]) {
-      [_delegate NudgesClickEventByType:KNudgesType_Rate jumpType:jumpType url:url];
-    }
-  }
+- (void)RateClickEventByType:(KButtonsUrlJumpType)jumpType Url:(NSString *)url invokeAction:(NSString *)invokeAction buttonName:(NSString *)buttonName model:(NudgesBaseModel *)model {
+//  if (_delegate && [_delegate conformsToProtocol:@protocol(RateEventDelegate)]) {
+//    if (_delegate && [_delegate respondsToSelector:@selector(NudgesClickEventByType:jumpType:url:)]) {
+//      [_delegate NudgesClickEventByType:KNudgesType_Rate jumpType:jumpType url:url];
+//    }
+//  }
+  
+  NSString *nudgesId = [NSString stringWithFormat:@"%ld",(long)model.nudgesId];
+  NSString *nudgesName = isEmptyString_Nd(model.nudgesName)?@"":model.nudgesName;
+  // 发送通知到RN
+  [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"ButtonClickEvent",@"body":@{@"nudgesId":nudgesId,@"nudgesName":nudgesName,@"nudgesType":@(model.nudgesType),@"buttonName":buttonName,@"invokeAction":invokeAction,@"url":url,@"schemeType":@(jumpType),@"eventTypeId":@"onNudgesButtonClick"}}];
 }
 
 - (void)RateSubmitByScore:(double)score thumb:(NSInteger)thumbsScore {
@@ -1003,12 +1046,18 @@ static HJNudgesManager *manager = nil;
   }
 }
 
-- (void)AnnouncementClickEventByType:(KButtonsUrlJumpType)jumpType Url:(NSString *)url {
-  if (_delegate && [_delegate conformsToProtocol:@protocol(NudgesEventDelegate)]) {
-    if (_delegate && [_delegate respondsToSelector:@selector(NudgesClickEventByType:jumpType:url:)]) {
-      [_delegate NudgesClickEventByType:KNudgesType_FunnelReminders jumpType:jumpType url:url];
-    }
-  }
+- (void)AnnouncementClickEventByType:(KButtonsUrlJumpType)jumpType Url:(NSString *)url invokeAction:(nonnull NSString *)invokeAction buttonName:(nonnull NSString *)buttonName model:(nonnull NudgesBaseModel *)model {
+//  if (_delegate && [_delegate conformsToProtocol:@protocol(NudgesEventDelegate)]) {
+//    if (_delegate && [_delegate respondsToSelector:@selector(NudgesClickEventByType:jumpType:url:)]) {
+//      [_delegate NudgesClickEventByType:KNudgesType_FunnelReminders jumpType:jumpType url:url];
+//    }
+//  }
+  
+  NSString *nudgesId = [NSString stringWithFormat:@"%ld",(long)model.nudgesId];
+  NSString *nudgesName = isEmptyString_Nd(model.nudgesName)?@"":model.nudgesName;
+  // 发送通知到RN
+  [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"ButtonClickEvent",@"body":@{@"nudgesId":nudgesId,@"nudgesName":nudgesName,@"nudgesType":@(model.nudgesType),@"buttonName":buttonName,@"invokeAction":invokeAction,@"url":url,@"schemeType":@(jumpType),@"eventTypeId":@"onNudgesButtonClick"}}];
+  
 }
 
 #pragma mark -- 上报数据

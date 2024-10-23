@@ -85,16 +85,18 @@ static HJToolTipsManager *manager = nil;
 					return;
 				}
 				if (_delegate && [_delegate conformsToProtocol:@protocol(ToolTipsEventDelegate)]) {
-					if (_delegate && [_delegate respondsToSelector:@selector(ToolTipsClickEventByType:Url:)]) {
-						[_delegate ToolTipsClickEventByType:item.action.urlJumpType Url:item.action.url];
-						
-						// 神策埋点
-						NSString *contactId = isEmptyString_Nd(_baseModel.contactId)?@"":_baseModel.contactId;
-						NSString *nudgesName = isEmptyString_Nd(_baseModel.nudgesName)?@"":_baseModel.nudgesName;
-						NSString *pageName = isEmptyString_Nd(_baseModel.pageName)?@"":_baseModel.pageName;
-						NSString *text = isEmptyString_Nd(item.text.content)?@"":item.text.content;
-						NSString *url = isEmptyString_Nd(item.action.url)?@"":item.action.url;
-						NSString *invokeAction = isEmptyString_Nd(item.action.invokeAction)?@"":item.action.invokeAction;
+          if (_delegate && [_delegate respondsToSelector:@selector(ToolTipsClickEventByType:Url:invokeAction:buttonName:model:)]) {
+            
+            // 神策埋点
+            NSString *contactId = isEmptyString_Nd(_baseModel.contactId)?@"":_baseModel.contactId;
+            NSString *nudgesName = isEmptyString_Nd(_baseModel.nudgesName)?@"":_baseModel.nudgesName;
+            NSString *pageName = isEmptyString_Nd(_baseModel.pageName)?@"":_baseModel.pageName;
+            NSString *text = isEmptyString_Nd(item.text.content)?@"":item.text.content;
+            NSString *url = isEmptyString_Nd(item.action.url)?@"":item.action.url;
+            NSString *invokeAction = isEmptyString_Nd(item.action.invokeAction)?@"":item.action.invokeAction;
+            
+						[_delegate ToolTipsClickEventByType:item.action.urlJumpType Url:item.action.url invokeAction:invokeAction buttonName:text model:self.baseModel];
+            
 						NSDictionary *dic = @{@"contact_id":contactId,@"nudges_name":nudgesName,@"nudges_id":@(_baseModel.nudgesId),@"campaign_id":@(_baseModel.campaignId),@"page_name":pageName,@"button_name":text,@"jump_url":url,@"invoke_action":invokeAction};
 //						[[SensorsManagement sharedInstance]trackWithName:@"NudgesButtonClick" withProperties:dic];
 					}
@@ -1170,10 +1172,17 @@ static HJToolTipsManager *manager = nil;
 	[[TKUtils topViewController].tabBarController.view bringSubviewToFront:view];
 	
 	[popTipView presentPointingAtView:view inView:[TKUtils topViewController].view animated:NO];
-	
-	// 神策埋点
-	NSString *contactId = isEmptyString_Nd(baseModel.contactId)?@"":baseModel.contactId;
-	NSString *nudgesName = isEmptyString_Nd(baseModel.nudgesName)?@"":baseModel.nudgesName;
+  
+  
+  // 神策埋点
+  NSString *contactId = isEmptyString_Nd(baseModel.contactId)?@"":baseModel.contactId;
+  NSString *nudgesName = isEmptyString_Nd(baseModel.nudgesName)?@"":baseModel.nudgesName;
+  
+  // 发送通知给RN
+  [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"NudgesShowEvent",@"body":@{@"nudgesId":contactId,@"nudgesName":nudgesName,@"nudgesType":@(baseModel.nudgesType),@"eventTypeId":@"onNudgesShow"}}];
+  
+  
+  
 	NSString *pageName = isEmptyString_Nd(baseModel.pageName)?@"":baseModel.pageName;
 	NSDictionary *dic = @{@"contact_id":contactId,@"nudges_name":nudgesName,@"nudges_id":@(baseModel.nudgesId),@"campaign_id":@(baseModel.campaignId),@"page_name":pageName};
 //	[[SensorsManagement sharedInstance]trackWithName:@"NudgesShow" withProperties:dic];

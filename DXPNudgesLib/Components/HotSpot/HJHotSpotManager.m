@@ -81,8 +81,20 @@ static HJHotSpotManager *manager = nil;
                     return;
                 }
                 if (_delegate && [_delegate conformsToProtocol:@protocol(HotSpotEventDelegate)]) {
-                    if (_delegate && [_delegate respondsToSelector:@selector(HotSpotClickEventByType:Url:)]) {
-                        [_delegate HotSpotClickEventByType:item.action.urlJumpType Url:item.action.url];
+                  if (_delegate && [_delegate respondsToSelector:@selector(HotSpotClickEventByType:Url:invokeAction:buttonName:model:)]) {
+                    
+                    // 神策埋点
+                    NSString *contactId = isEmptyString_Nd(_baseModel.contactId)?@"":_baseModel.contactId;
+                    NSString *nudgesName = isEmptyString_Nd(_baseModel.nudgesName)?@"":_baseModel.nudgesName;
+                    NSString *pageName = isEmptyString_Nd(_baseModel.pageName)?@"":_baseModel.pageName;
+                    NSString *text = isEmptyString_Nd(item.text.content)?@"":item.text.content;
+                    NSString *url = isEmptyString_Nd(item.action.url)?@"":item.action.url;
+                    NSString *invokeAction = isEmptyString_Nd(item.action.invokeAction)?@"":item.action.invokeAction;
+                    
+                    [_delegate HotSpotClickEventByType:item.action.urlJumpType Url:item.action.url invokeAction:invokeAction buttonName:text model:self.baseModel];
+                      
+                      
+                      
                     }
                 }
                 [self removeBeaConView];
@@ -921,6 +933,13 @@ static HJHotSpotManager *manager = nil;
     
     // 显示后上报接口
     [[HJNudgesManager sharedInstance] nudgesContactRespByNudgesId:baseModel.nudgesId contactId:baseModel.contactId];
+  
+  NSString *contactId = isEmptyString_Nd(_baseModel.contactId)?@"":_baseModel.contactId;
+  NSString *nudgesName = isEmptyString_Nd(_baseModel.nudgesName)?@"":_baseModel.nudgesName;
+  
+  [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"NudgesShowEvent",@"body":@{@"nudgesId":contactId,@"nudgesName":nudgesName,@"nudgesType":@(_baseModel.nudgesType),@"eventTypeId":@"onNudgesShow"}}];
+  
+  
     
     [self.visiblePopTipViews addObject:popTipView];
     

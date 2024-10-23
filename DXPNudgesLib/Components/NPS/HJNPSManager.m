@@ -80,8 +80,19 @@ static HJNPSManager *manager = nil;
                     return;
                 }
                 if (_delegate && [_delegate conformsToProtocol:@protocol(NPSEventDelegate)]) {
-                    if (_delegate && [_delegate respondsToSelector:@selector(NPSClickEventByType:Url:)]) {
-                        [_delegate NPSClickEventByType:item.action.urlJumpType Url:item.action.url];
+                  if (_delegate && [_delegate respondsToSelector:@selector(NPSClickEventByType:Url:invokeAction:buttonName:model:)]) {
+//                        [_delegate NPSClickEventByType:item.action.urlJumpType Url:item.action.url];
+                    
+                    // 神策埋点
+                    NSString *contactId = isEmptyString_Nd(_baseModel.contactId)?@"":_baseModel.contactId;
+                    NSString *nudgesName = isEmptyString_Nd(_baseModel.nudgesName)?@"":_baseModel.nudgesName;
+                    NSString *pageName = isEmptyString_Nd(_baseModel.pageName)?@"":_baseModel.pageName;
+                    NSString *text = isEmptyString_Nd(item.text.content)?@"":item.text.content;
+                    NSString *url = isEmptyString_Nd(item.action.url)?@"":item.action.url;
+                    NSString *invokeAction = isEmptyString_Nd(item.action.invokeAction)?@"":item.action.invokeAction;
+                    
+                    [_delegate NPSClickEventByType:item.action.urlJumpType Url:item.action.url invokeAction:invokeAction buttonName:text model:self.baseModel];
+                    
                     }
                 }
                 if (_baseModel.positionModel.position == KPosition_bottom) {
@@ -198,6 +209,11 @@ static HJNPSManager *manager = nil;
     
     // 显示后上报接口
     [[HJNudgesManager sharedInstance] nudgesContactRespByNudgesId:_baseModel.nudgesId contactId:_baseModel.contactId];
+  
+  NSString *contactId = isEmptyString_Nd(_baseModel.contactId)?@"":_baseModel.contactId;
+  NSString *nudgesName = isEmptyString_Nd(_baseModel.nudgesName)?@"":_baseModel.nudgesName;
+  // 发送通知给RN
+  [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"NudgesShowEvent",@"body":@{@"nudgesId":contactId,@"nudgesName":nudgesName,@"nudgesType":@(_baseModel.nudgesType),@"eventTypeId":@"onNudgesShow"}}];
 }
 
 #pragma mark -- SliderViewEventDelegate
