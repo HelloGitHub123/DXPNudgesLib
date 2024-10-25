@@ -76,6 +76,14 @@ static NdHJHttpSessionManager *manager = nil;
         
         [request.requestHeaderDict setValue:hmacSHA1Sign forKey:@"Authorization"];
         [request.requestHeaderDict setValue:timestamp forKey:@"X-Date"];
+		
+		NSLog(@"国际化语言标识:%@",[HJNudgesManager sharedInstance].configParametersModel.locale);
+		NSString *lang = [HJNudgesManager sharedInstance].configParametersModel.locale;
+		[request.requestHeaderDict setValue:lang forKey:@"locale"];
+		
+		NSLog(@"token:%@",[HJNudgesManager sharedInstance].configParametersModel.locale);
+	  NSString *token = [HJNudgesManager sharedInstance].configParametersModel.token;
+	  [request.requestHeaderDict setValue:token forKey:@"locale"];
     }
     
     AFHTTPRequestSerializer *serializer = [self p_requestSerializerWithRequest:request];

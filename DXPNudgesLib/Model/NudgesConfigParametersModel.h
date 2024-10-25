@@ -40,6 +40,12 @@ NS_ASSUME_NONNULL_BEGIN
 /// eg: APP 标识Id
 @property (nonatomic, copy) NSString *appId;
 
+// header中国际化语言参数
+@property (nonatomic, copy) NSString *locale;
+
+//
+@property (nonatomic, copy) NSString *token;
+
 @end
 
 NS_ASSUME_NONNULL_END
