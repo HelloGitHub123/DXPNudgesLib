@@ -81,9 +81,9 @@ static NdHJHttpSessionManager *manager = nil;
 		NSString *lang = [HJNudgesManager sharedInstance].configParametersModel.locale;
 		[request.requestHeaderDict setValue:lang forKey:@"locale"];
 		
-		NSLog(@"token:%@",[HJNudgesManager sharedInstance].configParametersModel.locale);
+		NSLog(@"token:%@",[HJNudgesManager sharedInstance].configParametersModel.token);
 	  NSString *token = [HJNudgesManager sharedInstance].configParametersModel.token;
-	  [request.requestHeaderDict setValue:token forKey:@"locale"];
+	  [request.requestHeaderDict setValue:token forKey:@"token"];
     }
     
     AFHTTPRequestSerializer *serializer = [self p_requestSerializerWithRequest:request];
