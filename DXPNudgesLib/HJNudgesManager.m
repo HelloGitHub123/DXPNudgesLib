@@ -308,6 +308,8 @@ static HJNudgesManager *manager = nil;
             }
           }
         }
+        
+        [[HJNudgesManager sharedInstance] queryNudgesWithPageName:@"viewController"];
       }
     }
   }];

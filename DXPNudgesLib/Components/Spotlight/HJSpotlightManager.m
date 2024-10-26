@@ -91,12 +91,10 @@ static HJSpotlightManager *manager = nil;
             
             [_delegate SpotlightClickEventByType:item.action.urlJumpType Url:item.action.url invokeAction:invokeAction buttonName:text model:self.baseModel];
             
+            // 埋点发送通知给RN
+            [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"NudgeClick",@"body":@{@"nudgesId":@(_baseModel.nudgesId),@"nudgesName":nudgesName,@"contactId":_baseModel.contactId,@"campaignCode":@(_baseModel.campaignId),@"batchId":@"",@"source":@"1",@"pageName":pageName}}];
             
-//						[_delegate SpotlightClickEventByType:item.action.urlJumpType Url:item.action.url];
-						
-						
-						NSDictionary *dic = @{@"contact_id":contactId,@"nudges_name":nudgesName,@"nudges_id":@(_baseModel.nudgesId),@"campaign_id":@(_baseModel.campaignId),@"page_name":pageName,@"button_name":text,@"jump_url":url,@"invoke_action":invokeAction};
-//						[[SensorsManagement sharedInstance]trackWithName:@"NudgesButtonClick" withProperties:dic];
+            
 					}
 				}
 				[self stopCurrentPlayingView]; // 停止播放器
@@ -905,16 +903,13 @@ static HJSpotlightManager *manager = nil;
 	// 神策埋点
 	NSString *contactId = isEmptyString_Nd(baseModel.contactId)?@"":baseModel.contactId;
 	NSString *nudgesName = isEmptyString_Nd(baseModel.nudgesName)?@"":baseModel.nudgesName;
-  
+  NSString *pageName = isEmptyString_Nd(baseModel.pageName)?@"":baseModel.pageName;
   
   // 发送通知给RN
   [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"NudgesShowEvent",@"body":@{@"nudgesId":contactId,@"nudgesName":nudgesName,@"nudgesType":@(baseModel.nudgesType),@"eventTypeId":@"onNudgesShow"}}];
   
-  
-  
-	NSString *pageName = isEmptyString_Nd(baseModel.pageName)?@"":baseModel.pageName;
-	NSDictionary *dic = @{@"contact_id":contactId,@"nudges_name":nudgesName,@"nudges_id":@(baseModel.nudgesId),@"campaign_id":@(baseModel.campaignId),@"page_name":pageName};
-//	[[SensorsManagement sharedInstance]trackWithName:@"NudgesShow" withProperties:dic];
+  // 埋点发送通知给RN
+  [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"NudgeShow",@"body":@{@"nudgesId":@(_baseModel.nudgesId),@"nudgesName":nudgesName,@"contactId":contactId,@"campaignCode":@(_baseModel.campaignId),@"batchId":@"",@"source":@"1",@"pageName":pageName}}];
 	
 	// 显示后上报接口
 	[[HJNudgesManager sharedInstance] nudgesContactRespByNudgesId:baseModel.nudgesId contactId:baseModel.contactId];

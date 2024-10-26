@@ -93,6 +93,9 @@ static HJNPSManager *manager = nil;
                     
                     [_delegate NPSClickEventByType:item.action.urlJumpType Url:item.action.url invokeAction:invokeAction buttonName:text model:self.baseModel];
                     
+                    // 埋点发送通知给RN
+                    [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"NudgeClick",@"body":@{@"nudgesId":@(_baseModel.nudgesId),@"nudgesName":nudgesName,@"contactId":_baseModel.contactId,@"campaignCode":@(_baseModel.campaignId),@"batchId":@"",@"source":@"1",@"pageName":pageName}}];
+                    
                     }
                 }
                 if (_baseModel.positionModel.position == KPosition_bottom) {
@@ -212,8 +215,13 @@ static HJNPSManager *manager = nil;
   
   NSString *contactId = isEmptyString_Nd(_baseModel.contactId)?@"":_baseModel.contactId;
   NSString *nudgesName = isEmptyString_Nd(_baseModel.nudgesName)?@"":_baseModel.nudgesName;
+  NSString *pageName = isEmptyString_Nd(_baseModel.pageName)?@"":_baseModel.pageName;
+  
   // 发送通知给RN
   [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"NudgesShowEvent",@"body":@{@"nudgesId":contactId,@"nudgesName":nudgesName,@"nudgesType":@(_baseModel.nudgesType),@"eventTypeId":@"onNudgesShow"}}];
+  
+  // 埋点发送通知给RN
+  [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"NudgeShow",@"body":@{@"nudgesId":@(_baseModel.nudgesId),@"nudgesName":nudgesName,@"contactId":contactId,@"campaignCode":@(_baseModel.campaignId),@"batchId":@"",@"source":@"1",@"pageName":pageName}}];
 }
 
 #pragma mark -- SliderViewEventDelegate

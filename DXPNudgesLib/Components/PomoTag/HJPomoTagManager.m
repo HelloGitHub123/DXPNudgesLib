@@ -356,6 +356,9 @@ static HJPomoTagManager *manager = nil;
   // 发送通知给RN
   [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"NudgesShowEvent",@"body":@{@"nudgesId":contactId,@"nudgesName":nudgesName,@"nudgesType":@(_baseModel.nudgesType),@"eventTypeId":@"onNudgesShow"}}];
   
+  // 埋点发送通知给RN
+  [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"NudgeShow",@"body":@{@"nudgesId":@(_baseModel.nudgesId),@"nudgesName":nudgesName,@"contactId":contactId,@"campaignCode":@(_baseModel.campaignId),@"batchId":@"",@"source":@"1",@"pageName":pageName}}];
+  
 	
 	[self.visiblePopTipViews addObject:popTipView];
 	

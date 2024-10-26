@@ -92,7 +92,7 @@
     } else {
         self.scorePercent = starScore / self.numberOfStars;
         if (self.sendStarPercent) {
-            self.sendStarPercent(self.scorePercent);
+            self.sendStarPercent(self.scorePercent, self.numberOfStars);
         }
     }
 }

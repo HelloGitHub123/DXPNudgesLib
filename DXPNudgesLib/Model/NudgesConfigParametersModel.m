@@ -19,8 +19,8 @@
         self.channelCode = @"";
         self.adviceCode = @"";
         self.appId = @"";
-		self.locale = @"en";
-		self.token = @"";
+        self.locale = @"en";
+        self.token = @"";
     }
     return self;
 }

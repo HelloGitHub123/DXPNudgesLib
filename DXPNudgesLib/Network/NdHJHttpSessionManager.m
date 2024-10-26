@@ -76,16 +76,18 @@ static NdHJHttpSessionManager *manager = nil;
         
         [request.requestHeaderDict setValue:hmacSHA1Sign forKey:@"Authorization"];
         [request.requestHeaderDict setValue:timestamp forKey:@"X-Date"];
-		
-		NSLog(@"国际化语言标识:%@",[HJNudgesManager sharedInstance].configParametersModel.locale);
-		NSString *lang = [HJNudgesManager sharedInstance].configParametersModel.locale;
-		[request.requestHeaderDict setValue:lang forKey:@"locale"];
-		
-		NSLog(@"token:%@",[HJNudgesManager sharedInstance].configParametersModel.token);
-	  NSString *token = [HJNudgesManager sharedInstance].configParametersModel.token;
-	  [request.requestHeaderDict setValue:token forKey:@"token"];
+      
+        NSLog(@"国际化语言标识:%@",[HJNudgesManager sharedInstance].configParametersModel.locale);
+        NSString *lang = [HJNudgesManager sharedInstance].configParametersModel.locale;
+        [request.requestHeaderDict setValue:lang forKey:@"locale"];
+      
+      
+        NSLog(@"token:%@",[HJNudgesManager sharedInstance].configParametersModel.token);
+      NSString *token = [HJNudgesManager sharedInstance].configParametersModel.token;
+      [request.requestHeaderDict setValue:token forKey:@"token"];
     }
     
+  
     AFHTTPRequestSerializer *serializer = [self p_requestSerializerWithRequest:request];
     serializer.HTTPMethodsEncodingParametersInURI = [NSSet setWithObjects:@"GET", @"HEAD", nil];
     NSString *httpMethod = [self p_httpMethod:request.httpMethod];

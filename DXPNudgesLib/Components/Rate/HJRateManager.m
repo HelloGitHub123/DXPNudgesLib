@@ -30,6 +30,7 @@ static HJRateManager *manager = nil;
 @interface HJRateManager ()<CMPopTipViewDelegate, MonolayerViewDelegate> {
     double d_starScore; // 评分的值
     int thumbsScore;  // 点赞点踩的值
+  NSInteger starNumbers;
 }
 @property (nonatomic, strong) NSMutableArray *visiblePopTipViews;
 @property (nonatomic, strong) dispatch_source_t timer;
@@ -102,6 +103,10 @@ static HJRateManager *manager = nil;
                     
                     [_delegate RateClickEventByType:item.action.urlJumpType Url:item.action.url invokeAction:invokeAction buttonName:text model:self.baseModel];
                     
+                    
+                    // 埋点发送通知给RN
+                    [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"NudgeClick",@"body":@{@"nudgesId":@(_baseModel.nudgesId),@"nudgesName":nudgesName,@"contactId":_baseModel.contactId,@"campaignCode":@(_baseModel.campaignId),@"batchId":@"",@"source":@"1",@"pageName":pageName}}];
+                    
                     }
                 }
                 if (_baseModel.positionModel.position == KPosition_Middle) {
@@ -123,8 +128,21 @@ static HJRateManager *manager = nil;
             } else if (KBorderStyle_InvokeAction == item.action.type) {
                 // 调用方法
                 if (_delegate && [_delegate conformsToProtocol:@protocol(RateEventDelegate)]) {
-                    if (_delegate && [_delegate respondsToSelector:@selector(RateClickEventByType:Url:)]) {
+                  if (_delegate && [_delegate respondsToSelector:@selector(RateClickEventByType:Url:invokeAction:buttonName:model:)]) {
                         [_delegate RateSubmitByScore:d_starScore thumb:thumbsScore];
+                      
+                      NSString *nudgesName = isEmptyString_Nd(_baseModel.nudgesName)?@"":_baseModel.nudgesName;
+                      NSString *pageName = isEmptyString_Nd(_baseModel.pageName)?@"":_baseModel.pageName;
+                      NSString *thumbsScoreStr = [NSString stringWithFormat:@"%d",thumbsScore];
+                     
+                      // 选项是否被选中
+                      NSMutableDictionary *optionDic = [NSMutableDictionary new];
+                      NSInteger selectedIndex = d_starScore * starNumbers;
+                      NSString *optionName = [NSString stringWithFormat:@"Option%ld",(long)(selectedIndex)];
+              
+                      // 埋点发送通知给RN
+                    [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"NudgeFeedback",@"body":@{@"nudgesId":@(_baseModel.nudgesId),@"nudgesName":nudgesName,@"contactId":_baseModel.contactId,@"campaignCode":@(_baseModel.campaignId),@"score":@(d_starScore),@"thumbResult":thumbsScoreStr,@"source":@"1",@"pageName":pageName,@"batchId":@"",optionName:@(1)}}];
+                      
                     }
                 }
                 // 关闭Nudges
@@ -256,9 +274,13 @@ static HJRateManager *manager = nil;
   
   NSString *contactId = isEmptyString_Nd(_baseModel.contactId)?@"":_baseModel.contactId;
   NSString *nudgesName = isEmptyString_Nd(_baseModel.nudgesName)?@"":_baseModel.nudgesName;
+  NSString *pageName = isEmptyString_Nd(_baseModel.pageName)?@"":_baseModel.pageName;
   
   // 发送通知给RN
   [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"NudgesShowEvent",@"body":@{@"nudgesId":contactId,@"nudgesName":nudgesName,@"nudgesType":@(_baseModel.nudgesType),@"eventTypeId":@"onNudgesShow"}}];
+  
+  // 埋点发送通知给RN
+  [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"NudgeShow",@"body":@{@"nudgesId":@(_baseModel.nudgesId),@"nudgesName":nudgesName,@"contactId":contactId,@"campaignCode":@(_baseModel.campaignId),@"batchId":@"",@"source":@"1",@"pageName":pageName}}];
     
 }
 
@@ -323,7 +345,10 @@ static HJRateManager *manager = nil;
     self.monolayerView.monolayerViewType = KMonolayerViewType_full; // 全屏遮罩
     self.monolayerView.delegate = self;
     // 展示蒙层
-//    if (baseModel.backdropModel.enabled) {
+  if (!baseModel.backdropModel.enabled) {
+    self.monolayerView.backgroundAlpha = 0.f;
+    self.monolayerView.backgroundColor = [UIColor clearColor];
+  } else {
     if (baseModel.backdropModel.type == KBackgroundType_Image) {
         // 图片
     } else if (baseModel.backdropModel.type == KBackgroundType_Gradient) {
@@ -348,6 +373,8 @@ static HJRateManager *manager = nil;
             self.monolayerView.bgroundColor = baseModel.backdropModel.backgroundColor;
         }
     }
+  }
+
 //    }
 //    [kAppDelegate.window addSubview:self.monolayerView];
     [[TKUtils topViewController].view addSubview:self.monolayerView];
@@ -516,10 +543,11 @@ static HJRateManager *manager = nil;
             self.qcStarView.isAnimation = YES;
             //是否仅仅是展示,默认为NO，可选
             //self.qcStarView.isJsutDisplay = YES;
-            self.qcStarView.sendStarPercent= ^(double data) {
+            self.qcStarView.sendStarPercent= ^(double data,  NSInteger starNumbers) {
                 NSLog(@"%f",data);
                 
                 d_starScore = data;
+              starNumbers = starNumbers;
             };
         }
         // 点赞点彩
@@ -817,8 +845,10 @@ static HJRateManager *manager = nil;
             self.qcStarView.isAnimation = YES;
             //是否仅仅是展示,默认为NO，可选
             //self.qcStarView.isJsutDisplay = YES;
-            self.qcStarView.sendStarPercent= ^(double data) {
+            self.qcStarView.sendStarPercent= ^(double data, NSInteger starNumbers) {
                 NSLog(@"%f",data);
+              d_starScore = data;
+              starNumbers = starNumbers;
             };
         }
         // 点赞点彩

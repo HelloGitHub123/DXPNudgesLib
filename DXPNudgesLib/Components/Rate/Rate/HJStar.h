@@ -24,5 +24,5 @@
 //封装方法
 - (instancetype)initWithFrame:(CGRect)frame numberOfStars:(NSInteger)numberOfStars;
 //block反向传星星score
-@property(nonatomic,strong) void (^sendStarPercent)(double percent);
+@property(nonatomic,strong) void (^sendStarPercent)(double percent, NSInteger starNumbers);
 @end
