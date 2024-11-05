@@ -22,5 +22,7 @@
 
 @property (nonatomic, strong) UILabel *placeholderLabel;
 
+@property (nonatomic, copy) NSString *contentText;
+
 
 @end

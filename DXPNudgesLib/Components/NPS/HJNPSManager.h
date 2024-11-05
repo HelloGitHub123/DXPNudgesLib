@@ -14,12 +14,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol NPSEventDelegate <NSObject>
 
-/// eg:按钮点击事件
-/// @param jumpType 跳转类型
-/// @param url 跳转路由 or 路径
-- (void)NPSClickEventByType:(KButtonsUrlJumpType)jumpType Url:(NSString *)url invokeAction:(NSString *)invokeAction buttonName:(NSString *)buttonName model:(NudgesBaseModel *)model;
+/// eg:按钮点击事件 score: 评分  thumbResult 点赞点踩
+- (void)NPSClickEventByActionModel:(ActionModel *)actionModel isClose:(BOOL)isClose buttonName:(NSString *)buttonName nudgeModel:(NudgesBaseModel *)model score:(NSString *)score optionList:(NSMutableArray *)optionList thumbResult:(NSString *)thumbResult comments:(NSString *)comments feedbackDuration:(NSInteger)feedbackDuration;
+
+
 /// eg:提交评分
 - (void)NPSSubmitByScore:(NSInteger)score;
+
+// nudges显示出来后回调代理
+- (void)NPSShowEventByNudgesModel:(NudgesBaseModel *)model batchId:(NSString *)batchId source:(NSString *)source;
+
 @end
 
 

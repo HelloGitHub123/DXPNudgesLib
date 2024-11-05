@@ -27,6 +27,8 @@
 #import <DXPToolsLib/SNAlertMessage.h>
 #import "NdIMDBManager.h"
 #import <DXPFontManagerLib/FontManager.h>
+#import "FrequencyModel.h"
+#import "NudgesBaseModel.h"
 
 static HJNudgesManager *manager = nil;
 
@@ -44,6 +46,11 @@ static HJNudgesManager *manager = nil;
 
 @property (nonatomic, strong) NudgesModel *currentModel; //
 @property (nonatomic, strong) NudgesBaseModel *currentBaseModel; //
+// 反馈时长
+@property (nonatomic, assign) NSInteger feedbackDuration;
+
+/// 频次model
+@property (nonatomic, strong) FrequencyModel *frequencyModel;
 @end
 
 @implementation HJNudgesManager
@@ -80,6 +87,7 @@ static HJNudgesManager *manager = nil;
   self.isLock = NO;
   self.nIndex = 0;
   self.isReported = NO; // 默认不上报
+	self.visiblePopTipViews = [[NSMutableArray alloc] init];
 }
 
 // 判断App是否首次加载Nudges
@@ -170,56 +178,6 @@ static HJNudgesManager *manager = nil;
   [[NdHJSocketRocketManager instance] sendData:strSend];
 }
 
-// 上报设备信息
-- (void)uploadDeviceInfoWithMatchCode:(NSString *)matchCode {
-  // 获取设备device Id
-  UIDevice *currentDevice = [UIDevice currentDevice];
-  NSString *deviceId = [[currentDevice identifierForVendor] UUIDString];
-  if (isEmptyString_Nd(matchCode) || isEmptyString_Nd(deviceId)) {
-    NSLog(@"设备匹配码或者Device ID不能为空");
-    return;
-  }
-  // 获取设备品牌
-  NSString *brand = [self getCurrentDeviceModel];
-  // 获取设备系统信息
-  NSString *os = @"IOS";
-  // 获取设备系统版本
-  NSString *osVersion = [[UIDevice currentDevice] systemVersion];
-  NSLog(@"\n  设备基本信息:\n  MatchCode:%@ \n  Device ID:%@ \n  Brand:%@ \n  OS:%@ \n  OsVersion:%@ ",matchCode,deviceId,brand,os,osVersion);
-  
-  // 调用上传接口 /mccm/nudges/device/match 进行匹配
-  NdHJHttpRequest *request = [[NdHJHttpRequest alloc] init];
-  request.httpMethod = NdHJHttpMethodPOST;
-  NSString *reqUrl = [NSString stringWithFormat:@"%@nudges/device/match",self.configParametersModel.baseUrl];
-  request.requestUrl = reqUrl;
-  request.requestParams = @{
-    @"matchCode": matchCode,
-    @"deviceCode": deviceId,
-    @"brand": isEmptyString_Nd(brand)?@"":brand,
-    @"os": @"iOS",
-    @"width": [NSString stringWithFormat:@"%ld",(long)kScreenWidth],
-    @"height": [NSString stringWithFormat:@"%ld",(long)kScreenHeight],
-  };
-  [[NdHJHttpSessionManager sharedInstance] sendRequest:request complete:^(NdHJHttpReponse * _Nonnull response) {
-    if (!response.serverError) {
-      NSString *code = [response.responseObject objectForKey:@"code"];
-      NSString *msg = @"";
-      if ([code isEqualToString:@"MCCM-NUDGES-SUCC-000"]) {
-        msg = @"Matching success";
-      } else if ([code isEqualToString:@"MCCM-NUDGES-ERR-001"]) {
-        msg = @"Pairing operation timeout";
-      } else if ([code isEqualToString:@"MCCM-NUDGES-ERR-002"]) {
-        msg = @"Pairing anomalies";
-      } else {
-        msg = [response.responseObject objectForKey:@"msg"];
-      }
-      [SNAlertMessage displayMessageInView:[TKUtils topViewController].view Message:msg];
-    } else {
-      [SNAlertMessage displayMessageInView:[TKUtils topViewController].view Message:@"Device binding exception"];
-    }
-  }];
-}
-
 #pragma mark -- 开启入口
 - (void)start {
   // 请求全量nudges数据
@@ -234,7 +192,7 @@ static HJNudgesManager *manager = nil;
 
 #pragma mark -- 获取Nudges列表
 - (void)requestNudgesListWithModel:(NudgesConfigParametersModel *)model {
-  if (isEmptyString_Nd(model.baseUrl) || isEmptyString_Nd(model.accNbr)) {
+  if (isEmptyString_Nd(model.baseUrl) || isEmptyString_Nd(model.accNbr) || isEmptyString_Nd(self.currentPageName)) {
     return;
   }
   UIDevice *currentDevice = [UIDevice currentDevice];
@@ -285,7 +243,7 @@ static HJNudgesManager *manager = nil;
           //          if ([[pageName lowercaseString] containsString:@"viewcontroller"]) {
           //            [self.nudgesShowList addObject:dic];
           //          }
-          if ([pageName isEqualToString:self.currentPageName]) {
+          if (!isEmptyString_Nd(pageName) &&[pageName isEqualToString:self.currentPageName]) {
             [self.nudgesShowList addObject:dic];
           }
         }
@@ -309,7 +267,7 @@ static HJNudgesManager *manager = nil;
           }
         }
         
-        [[HJNudgesManager sharedInstance] queryNudgesWithPageName:@"viewController"];
+        [[HJNudgesManager sharedInstance] queryNudgesWithPageName:self.currentPageName];
       }
     }
   }];
@@ -446,19 +404,28 @@ static HJNudgesManager *manager = nil;
 
 #pragma mark -- 调试预览nudges (Preview)
 - (void)showPreviewNudges:(NSDictionary *)dic {
-  // 清空数据库数据
-  [NdHJNudgesDBManager deleteTableAllDataForNudges];
-  // 查找对应预览的nudges
-  [self removeAllPreviewNudge];
-  // 解析构造
-  NudgesModel *model = [[NudgesModel alloc] initWithMsgDic:dic];
-  model.remainTimes = 1; // 预览默认给一次
-  self.currentModel = model;
-  
-  NudgesBaseModel *baseModel = [[NudgesBaseModel alloc] initWithMsgModel:model];
-  self.currentBaseModel = baseModel;
-  // 检查是否存在当前页面
-  [self checkNudgesViewExist:model isPreview:YES];
+	if (self.visiblePopTipViews.count > 0) {
+		return;
+	}
+	
+	// 清空数据库数据
+	[NdHJNudgesDBManager deleteTableAllDataForNudges];
+	// 查找对应预览的nudges
+	[self removeAllPreviewNudge];
+	// 解析构造
+	NudgesModel *model = [[NudgesModel alloc] initWithMsgDic:dic];
+	model.remainTimes = 1; // 预览默认给一次
+	self.currentModel = model;
+	
+	NudgesBaseModel *baseModel = [[NudgesBaseModel alloc] initWithMsgModel:model];
+	self.currentBaseModel = baseModel;
+	
+	if (baseModel.nudgesType == KNudgesType_NPS || baseModel.nudgesType == KNudgesType_Forms || baseModel.nudgesType == KNudgesType_Rate || baseModel.nudgesType == KNudgesType_FunnelReminders || baseModel.nudgesType == KNudgesType_FloatingActions || baseModel.nudgesType == KNudgesType_Rate) {
+		[self previewConstructsNudgesViewByFindView:nil isFindType:KNudgeFineType_Exist_Find];
+	} else {
+		// 检查是否存在当前页面
+		[self checkNudgesViewExist:model isPreview:YES];
+	}
 }
 
 // 查找对应预览的nudges，进行移除
@@ -475,88 +442,93 @@ static HJNudgesManager *manager = nil;
 
 #pragma mark -- 预览nudges
 - (void)previewConstructsNudgesViewByFindView:(UIView *)findView isFindType:(KNudgeFindType)type {
-  
-
-  [self removeAllPreviewNudge];
-  
-  
-  if (type == KNudgeFineType_Exist_Find) {
-    // 类型匹配进行，显示
-    switch (self.currentModel.nudgesType) {
-      case KNudgesType_Hotspots: {
-        [HJHotSpotManager sharedInstance].nudgesModel = self.currentModel;
-        [HJHotSpotManager sharedInstance].baseModel = self.currentBaseModel;
-        [HJHotSpotManager sharedInstance].delegate = self;
-      }
-        break;
-      case KNudgesType_FunnelReminders: {
-        [HJAnnouncementManager sharedInstance].nudgesModel = self.currentModel;
-        [HJAnnouncementManager sharedInstance].baseModel = self.currentBaseModel;
-        [HJAnnouncementManager sharedInstance].delegate = self;
-      }
-        break;
-      case KNudgesType_SpotLight: {
-        [HJSpotlightManager sharedInstance].nudgesModel = self.currentModel;
-        [HJSpotlightManager sharedInstance].baseModel =  self.currentBaseModel;
-        [HJSpotlightManager sharedInstance].findView = findView;
-        [HJSpotlightManager sharedInstance].delegate = self;
-        // 开始显示
-        [[HJSpotlightManager sharedInstance] startConstructsNudgesView];
-      }
-        break;
-      case KNudgesType_FOMOTags: {
-        [HJPomoTagManager sharedInstance].nudgesModel = self.currentModel;
-        [HJPomoTagManager sharedInstance].baseModel = self.currentBaseModel;
-        [HJPomoTagManager sharedInstance].findView = findView;
-        [HJPomoTagManager sharedInstance].delegate = self;
-        // 开始显示
-        [[HJPomoTagManager sharedInstance] startConstructsNudgesView];
-      }
-        break;
-      case KNudgesType_FloatingActions: {
-        [HJFloatingAtionManager sharedInstance].nudgesModel = self.currentModel;
-        [HJFloatingAtionManager sharedInstance].baseModel = self.currentBaseModel;
-        [HJFloatingAtionManager sharedInstance].delegate = self;
-      }
-        break;
-      case KNudgesType_NPS: {
-        [HJNPSManager sharedInstance].nudgesModel = self.currentModel;
-        [HJNPSManager sharedInstance].baseModel = self.currentBaseModel;
-        [HJNPSManager sharedInstance].delegate = self;
-      }
-        break;
-      case KNudgesType_Rate: {
-        [HJRateManager sharedInstance].nudgesModel = self.currentModel;
-        [HJRateManager sharedInstance].baseModel = self.currentBaseModel;
-        [HJRateManager sharedInstance].delegate = self;
-      }
-        break;
-      case KNudgesType_Forms: {
-        [HJFeedBackManager sharedInstance].nudgesModel = self.currentModel;
-        [HJFeedBackManager sharedInstance].baseModel = self.currentBaseModel;
-        [HJFeedBackManager sharedInstance].delegate = self;
-      }
-        break;
-      case KNudgesType_Tooltips: {
-        [HJToolTipsManager sharedInstance].nudgesModel = self.currentModel;
-        [HJToolTipsManager sharedInstance].baseModel = self.currentBaseModel;
-        [HJToolTipsManager sharedInstance].findView = findView;
-        [HJToolTipsManager sharedInstance].delegate = self;
-        // 开始显示
-        [[HJToolTipsManager sharedInstance] startConstructsNudgesView];
-      }
-        break;
-      default: {
-        [HJToolTipsManager sharedInstance].nudgesModel = self.currentModel;
-        [HJToolTipsManager sharedInstance].baseModel = self.currentBaseModel;
-        [HJToolTipsManager sharedInstance].findView = findView;
-        [HJToolTipsManager sharedInstance].delegate = self;
-        // 开始显示
-        [[HJToolTipsManager sharedInstance] startConstructsNudgesView];
-      }
-        break;
-    }
-  }
+	
+	[self removeAllPreviewNudge];
+	
+	if (self.currentBaseModel.nudgesType == KNudgesType_NPS) {
+		[HJNPSManager sharedInstance].nudgesModel = self.currentModel;
+		[HJNPSManager sharedInstance].baseModel = self.currentBaseModel;
+		[HJNPSManager sharedInstance].delegate = self;
+		return;
+	}
+	if (self.currentModel.nudgesType == KNudgesType_Forms) {
+		[HJFeedBackManager sharedInstance].nudgesModel = self.currentModel;
+		[HJFeedBackManager sharedInstance].baseModel = self.currentBaseModel;
+		[HJFeedBackManager sharedInstance].delegate = self;
+		return;
+	}
+	
+	if (self.currentModel.nudgesType == KNudgesType_FunnelReminders) {
+		[HJAnnouncementManager sharedInstance].nudgesModel = self.currentModel;
+		[HJAnnouncementManager sharedInstance].baseModel = self.currentBaseModel;
+		[HJAnnouncementManager sharedInstance].delegate = self;
+		return;
+	}
+	
+	if (self.currentModel.nudgesType == KNudgesType_FloatingActions) {
+		[HJFloatingAtionManager sharedInstance].nudgesModel = self.currentModel;
+		[HJFloatingAtionManager sharedInstance].baseModel = self.currentBaseModel;
+		[HJFloatingAtionManager sharedInstance].delegate = self;
+		return;
+	}
+	
+	if (self.currentModel.nudgesType == KNudgesType_Rate) {
+		[HJRateManager sharedInstance].nudgesModel = self.currentModel;
+		[HJRateManager sharedInstance].baseModel = self.currentBaseModel;
+		[HJRateManager sharedInstance].delegate = self;
+		return;
+	}
+	
+	if (type == KNudgeFineType_Exist_Find) {
+		// 类型匹配进行，显示
+		switch (self.currentModel.nudgesType) {
+			case KNudgesType_Hotspots: {
+				[HJHotSpotManager sharedInstance].nudgesModel = self.currentModel;
+				[HJHotSpotManager sharedInstance].baseModel = self.currentBaseModel;
+				[HJHotSpotManager sharedInstance].findView = findView;
+				[HJHotSpotManager sharedInstance].delegate = self;
+				// 开始显示
+				[[HJHotSpotManager sharedInstance] startConstructsNudgesView];
+			}
+				break;
+			case KNudgesType_SpotLight: {
+				[HJSpotlightManager sharedInstance].nudgesModel = self.currentModel;
+				[HJSpotlightManager sharedInstance].baseModel =  self.currentBaseModel;
+				[HJSpotlightManager sharedInstance].findView = findView;
+				[HJSpotlightManager sharedInstance].delegate = self;
+				// 开始显示
+				[[HJSpotlightManager sharedInstance] startConstructsNudgesView];
+			}
+				break;
+			case KNudgesType_FOMOTags: {
+				[HJPomoTagManager sharedInstance].nudgesModel = self.currentModel;
+				[HJPomoTagManager sharedInstance].baseModel = self.currentBaseModel;
+				[HJPomoTagManager sharedInstance].findView = findView;
+				[HJPomoTagManager sharedInstance].delegate = self;
+				// 开始显示
+				[[HJPomoTagManager sharedInstance] startConstructsNudgesView];
+			}
+				break;
+			case KNudgesType_Tooltips: {
+				[HJToolTipsManager sharedInstance].nudgesModel = self.currentModel;
+				[HJToolTipsManager sharedInstance].baseModel = self.currentBaseModel;
+				[HJToolTipsManager sharedInstance].findView = findView;
+				[HJToolTipsManager sharedInstance].delegate = self;
+				// 开始显示
+				[[HJToolTipsManager sharedInstance] startConstructsNudgesView];
+			}
+				break;
+			default: {
+				[HJToolTipsManager sharedInstance].nudgesModel = self.currentModel;
+				[HJToolTipsManager sharedInstance].baseModel = self.currentBaseModel;
+				[HJToolTipsManager sharedInstance].findView = findView;
+				[HJToolTipsManager sharedInstance].delegate = self;
+				// 开始显示
+				[[HJToolTipsManager sharedInstance] startConstructsNudgesView];
+			}
+				break;
+		}
+	}
 }
 
 
@@ -603,26 +575,30 @@ static HJNudgesManager *manager = nil;
 
 // nudges的显示逻辑
 - (void)showNudgesViewWithPageName:(NSString *)pageName {
-  // 界面没有发生跳转,从缓存中拿数据进行展示
-  NSMutableArray *nudgesList = [NdHJNudgesDBManager selectNudgesDBWithPageName:pageName];
-  if (IsArrEmpty_Nd(nudgesList)) {
-    self.isLock = NO;
-    return;
-  } else {
-    self.showList = nudgesList;
-  }
-  // 展示逻辑：判断当前界面nudge有没有，并且判断有没有展示。 可能用到索引，用来记录展示的nudges的index
-  if (self.showList.count <= self.nIndex) {
-    self.isLock = NO;
-    self.nIndex = 0;
-    self.isFindView = NO;
-    return;
-  }
-  
-  NudgesModel *nudgeModel = [self.showList objectAtIndex:self.nIndex];
-  self.currentModel = nudgeModel;
-  // 检查是否存在当前页面
-  [self checkNudgesViewExist:nudgeModel isPreview:NO];
+	// 界面没有发生跳转,从缓存中拿数据进行展示
+	NSMutableArray *nudgesList = [NdHJNudgesDBManager selectNudgesDBWithPageName:pageName];
+	if (IsArrEmpty_Nd(nudgesList)) {
+		self.isLock = NO;
+		return;
+	} else {
+		self.showList = nudgesList;
+	}
+	// 展示逻辑：判断当前界面nudge有没有，并且判断有没有展示。 可能用到索引，用来记录展示的nudges的index
+	if (self.showList.count <= self.nIndex) {
+		self.isLock = NO;
+		self.nIndex = 0;
+		self.isFindView = NO;
+		return;
+	}
+	
+	NudgesModel *nudgeModel = [self.showList objectAtIndex:self.nIndex];
+	self.currentModel = nudgeModel;
+	if (self.currentModel.nudgesType == KNudgesType_NPS || self.currentModel.nudgesType == KNudgesType_Forms || self.currentModel.nudgesType == KNudgesType_Rate || self.currentModel.nudgesType == KNudgesType_FunnelReminders || self.currentModel.nudgesType == KNudgesType_FloatingActions || self.currentModel.nudgesType == KNudgesType_Rate) {
+		[[HJNudgesManager sharedInstance] startConstructsNudgesViewByFindView:nil isFindType:KNudgeFineType_Exist_Find];
+	} else {
+		// 检查是否存在当前页面
+		[self checkNudgesViewExist:nudgeModel isPreview:NO];
+	}
 }
 
 #pragma mark -- 检查对应的view是否存在
@@ -906,160 +882,195 @@ static HJNudgesManager *manager = nil;
 
 #pragma mark -- ToolTipsEventDelegate
 // 按钮点击事件
-- (void)ToolTipsClickEventByType:(KButtonsUrlJumpType)jumpType Url:(NSString *)url invokeAction:(nonnull NSString *)invokeAction buttonName:(nonnull NSString *)buttonName model:(nonnull NudgesBaseModel *)model {
-//  if (_delegate && [_delegate conformsToProtocol:@protocol(NudgesEventDelegate)]) {
-//    if (_delegate && [_delegate respondsToSelector:@selector(NudgesClickEventByType:jumpType:url:)]) {
-//      [_delegate NudgesClickEventByType:KNudgesType_Tooltips jumpType:jumpType url:url];
-//    }
-//  }
-  
-//  nudgesId   nudgesName   nudgesType   buttonName   invokeAction   url  schemeType  eventTypeId
-  NSString *nudgesId = [NSString stringWithFormat:@"%ld",(long)model.nudgesId];
-  NSString *nudgesName = isEmptyString_Nd(model.nudgesName)?@"":model.nudgesName;
-  // 发送通知到RN
-  [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"ButtonClickEvent",@"body":@{@"nudgesId":nudgesId,@"nudgesName":nudgesName,@"nudgesType":@(model.nudgesType),@"buttonName":buttonName,@"invokeAction":invokeAction,@"url":url,@"schemeType":@(jumpType),@"eventTypeId":@"onNudgesButtonClick"}}];
-  
+//- (void)ToolTipsClickEventByType:(KButtonsUrlJumpType)jumpType Url:(NSString *)url isClose:(BOOL)isClose invokeAction:(nonnull NSString *)invokeAction buttonName:(nonnull NSString *)buttonName model:(nonnull NudgesBaseModel *)model {
+//	
+	
+	
+- (void)ToolTipsClickEventByActionModel:(ActionModel *)actionModel isClose:(BOOL)isClose buttonName:(NSString *)buttonName nudgeModel:(NudgesBaseModel *)model {
+	
+	
+//	NSString *nudgesId = [NSString stringWithFormat:@"%ld",(long)model.nudgesId];
+//	NSString *nudgesName = isEmptyString_Nd(model.nudgesName)?@"":model.nudgesName;
+//	NSString *campaignCode = [NSString stringWithFormat:@"%ld",(long)model.campaignId];
+//	NSString *pageName = isEmptyString_Nd(self.currentPageName)?@"":self.currentPageName;
+	
+//	NSDictionary *bodyDic = @{@"nudgesId":nudgesId,@"nudgesName":nudgesName,@"pageName":pageName,@"contactId":model.contactId ,@"nudgesType":@(model.nudgesType),@"batchId":@"",@"source":@"1",@"buttonName":buttonName,@"isClose":@(isClose),@"campaignCode":campaignCode,@"invokeAction":invokeAction,@"jumpUrl":url,@"schemeType":@(jumpType),@"eventTypeId":@"onNudgesButtonClick"};
+	
+	if (self.buttonClickEventBlock) {
+		self.buttonClickEventBlock(actionModel, isClose, buttonName,  @"" ,model);
+	}
+}
+
+// nudges显示出来后回调代理
+- (void)ToolTipsShowEventByNudgesModel:(NudgesBaseModel *)model batchId:(NSString *)batchId source:(NSString *)source {
+	
+	if (self.nudgesShowEventBlock) {
+		self.nudgesShowEventBlock(model, batchId, source);
+	}
 }
 
 #pragma mark -- SpotlightEventDelegate
 // 按钮点击事件
-- (void)SpotlightClickEventByType:(KButtonsUrlJumpType)jumpType Url:(NSString *)url invokeAction:(nonnull NSString *)invokeAction buttonName:(nonnull NSString *)buttonName model:(nonnull NudgesBaseModel *)model {
-  
-//  if (_delegate && [_delegate conformsToProtocol:@protocol(NudgesEventDelegate)]) {
-//    if (_delegate && [_delegate respondsToSelector:@selector(NudgesClickEventByType:jumpType:url:)]) {
-//      [_delegate NudgesClickEventByType:KNudgesType_SpotLight jumpType:jumpType url:url];
-//    }
-//  }
-  
-  NSString *nudgesId = [NSString stringWithFormat:@"%ld",(long)model.nudgesId];
-  NSString *nudgesName = isEmptyString_Nd(model.nudgesName)?@"":model.nudgesName;
-  // 发送通知到RN
-  [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"ButtonClickEvent",@"body":@{@"nudgesId":nudgesId,@"nudgesName":nudgesName,@"nudgesType":@(model.nudgesType),@"buttonName":buttonName,@"invokeAction":invokeAction,@"url":url,@"schemeType":@(jumpType),@"eventTypeId":@"onNudgesButtonClick"}}];
-  
+- (void)SpotlightClickEventByActionModel:(ActionModel *)actionModel isClose:(BOOL)isClose buttonName:(NSString *)buttonName nudgeModel:(NudgesBaseModel *)model {
+	if (self.buttonClickEventBlock) {
+		self.buttonClickEventBlock(actionModel, isClose, buttonName, @"" , model);
+	}
+}
+
+// nudges显示出来后回调代理
+- (void)SpotlightShowEventByNudgesModel:(NudgesBaseModel *)model batchId:(NSString *)batchId source:(NSString *)source {
+	if (self.nudgesShowEventBlock) {
+		self.nudgesShowEventBlock(model, batchId, source);
+	}
 }
 
 #pragma mark -- PomoTagEventDelegate
 // 按钮点击事件
 - (void)PomoTagClickEventByType:(KButtonsUrlJumpType)jumpType Url:(NSString *)url {
-  if (_delegate && [_delegate conformsToProtocol:@protocol(PomoTagEventDelegate)]) {
-    if (_delegate && [_delegate respondsToSelector:@selector(NudgesClickEventByType:jumpType:url:)]) {
-      [_delegate NudgesClickEventByType:KNudgesType_FOMOTags jumpType:jumpType url:url];
-    }
-  }
+	//  if (_delegate && [_delegate conformsToProtocol:@protocol(PomoTagEventDelegate)]) {
+	//    if (_delegate && [_delegate respondsToSelector:@selector(NudgesClickEventByType:jumpType:url:)]) {
+	//      [_delegate NudgesClickEventByType:KNudgesType_FOMOTags jumpType:jumpType url:url];
+	//    }
+	//  }
+}
+
+- (void)PomoTagShowEventByNudgesModel:(NudgesBaseModel *)model batchId:(NSString *)batchId source:(NSString *)source {
+	if (self.nudgesShowEventBlock) {
+		self.nudgesShowEventBlock(model, batchId, source);
+	}
 }
 
 #pragma mark -- HotSpotEventDelegate
 // 按钮点击事件
-- (void)HotSpotClickEventByType:(KButtonsUrlJumpType)jumpType Url:(NSString *)url invokeAction:(nonnull NSString *)invokeAction buttonName:(nonnull NSString *)buttonName model:(nonnull NudgesBaseModel *)model {
-//  if (_delegate && [_delegate conformsToProtocol:@protocol(HotSpotEventDelegate)]) {
-//    if (_delegate && [_delegate respondsToSelector:@selector(NudgesClickEventByType:jumpType:url:)]) {
-//      [_delegate NudgesClickEventByType:KNudgesType_Hotspots jumpType:jumpType url:url];
-//    }
-//  }
-  
-  NSString *nudgesId = [NSString stringWithFormat:@"%ld",(long)model.nudgesId];
-  NSString *nudgesName = isEmptyString_Nd(model.nudgesName)?@"":model.nudgesName;
-  // 发送通知到RN
-  [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"ButtonClickEvent",@"body":@{@"nudgesId":nudgesId,@"nudgesName":nudgesName,@"nudgesType":@(model.nudgesType),@"buttonName":buttonName,@"invokeAction":invokeAction,@"url":url,@"schemeType":@(jumpType),@"eventTypeId":@"onNudgesButtonClick"}}];
-  
+- (void)HotSpotClickEventByActionModel:(ActionModel *)actionModel isClose:(BOOL)isClose buttonName:(NSString *)buttonName nudgeModel:(NudgesBaseModel *)model {
+	if (self.buttonClickEventBlock) {
+		self.buttonClickEventBlock(actionModel, isClose, buttonName, @"" , model);
+	}
+}
+
+- (void)HotSpotShowEventByNudgesModel:(NudgesBaseModel *)model batchId:(NSString *)batchId source:(NSString *)source {
+	if (self.nudgesShowEventBlock) {
+		self.nudgesShowEventBlock(model, batchId, source);
+	}
 }
 
 #pragma mark -- FloatingAtionEventDelegate
-- (void)FloatingAtionClickEventByType:(KButtonsUrlJumpType)jumpType Url:(NSString *)url invokeAction:(nonnull NSString *)invokeAction buttonName:(nonnull NSString *)buttonName model:(nonnull NudgesBaseModel *)model {
-//  if (_delegate && [_delegate conformsToProtocol:@protocol(FloatingAtionEventDelegate)]) {
-//    if (_delegate && [_delegate respondsToSelector:@selector(NudgesClickEventByType:jumpType:url:)]) {
-//      [_delegate NudgesClickEventByType:KNudgesType_FloatingActions jumpType:jumpType url:url];
-//    }
-//  }
-  
-  NSString *nudgesId = [NSString stringWithFormat:@"%ld",(long)model.nudgesId];
-  NSString *nudgesName = isEmptyString_Nd(model.nudgesName)?@"":model.nudgesName;
-  // 发送通知到RN
-  [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"ButtonClickEvent",@"body":@{@"nudgesId":nudgesId,@"nudgesName":nudgesName,@"nudgesType":@(model.nudgesType),@"buttonName":buttonName,@"invokeAction":invokeAction,@"url":url,@"schemeType":@(jumpType),@"eventTypeId":@"onNudgesButtonClick"}}];
-  
+- (void)FloatingAtionClickEventByActionModel:(ActionModel *)actionModel isClose:(BOOL)isClose buttonName:(NSString *)buttonName nudgeModel:(NudgesBaseModel *)model {
+	if (self.buttonClickEventBlock) {
+		self.buttonClickEventBlock(actionModel, isClose, buttonName, @"" , model);
+	}
+}
+
+- (void)FloatingAtionShowEventByNudgesModel:(NudgesBaseModel *)model batchId:(NSString *)batchId source:(NSString *)source {
+	if (self.nudgesShowEventBlock) {
+		self.nudgesShowEventBlock(model, batchId, source);
+	}
 }
 
 #pragma mark -- NPSEventDelegate
-- (void)NPSClickEventByType:(KButtonsUrlJumpType)jumpType Url:(NSString *)url invokeAction:(nonnull NSString *)invokeAction buttonName:(nonnull NSString *)buttonName model:(nonnull NudgesBaseModel *)model {
-//  if (_delegate && [_delegate conformsToProtocol:@protocol(NPSEventDelegate)]) {
-//    if (_delegate && [_delegate respondsToSelector:@selector(NudgesClickEventByType:jumpType:url:)]) {
-//      [_delegate NudgesClickEventByType:KNudgesType_NPS jumpType:jumpType url:url];
-//    }
-//  }
-  
-  NSString *nudgesId = [NSString stringWithFormat:@"%ld",(long)model.nudgesId];
-  NSString *nudgesName = isEmptyString_Nd(model.nudgesName)?@"":model.nudgesName;
-  // 发送通知到RN
-  [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"ButtonClickEvent",@"body":@{@"nudgesId":nudgesId,@"nudgesName":nudgesName,@"nudgesType":@(model.nudgesType),@"buttonName":buttonName,@"invokeAction":invokeAction,@"url":url,@"schemeType":@(jumpType),@"eventTypeId":@"onNudgesButtonClick"}}];
+/// eg:按钮点击事件 score: 评分  thumbResult 点赞点踩
+- (void)NPSClickEventByActionModel:(ActionModel *)actionModel isClose:(BOOL)isClose buttonName:(NSString *)buttonName nudgeModel:(NudgesBaseModel *)model score:(NSString *)score optionList:(NSMutableArray *)optionList thumbResult:(NSString *)thumbResult comments:(nonnull NSString *)comments feedbackDuration:(NSInteger)feedbackDuration {
+	
+	// 记录反馈时长
+	self.feedbackDuration = feedbackDuration;
+	
+	if (self.buttonClickEventBlock) {
+		self.buttonClickEventBlock(actionModel, isClose, buttonName,  @"" ,model);
+	}
+	
+	if (self.feedBackEventBlock) {
+		self.feedBackEventBlock(model, @"0", @"1", score, optionList, thumbResult, comments);
+	}
+}
 
+// nudges显示出来后回调代理
+- (void)NPSShowEventByNudgesModel:(NudgesBaseModel *)model batchId:(NSString *)batchId source:(NSString *)source {
+	if (self.nudgesShowEventBlock) {
+		self.nudgesShowEventBlock(model, batchId, source);
+	}
 }
 
 - (void)NPSSubmitByScore:(NSInteger)score {
-  if (_delegate && [_delegate conformsToProtocol:@protocol(NudgesEventDelegate)]) {
-    if (_delegate && [_delegate respondsToSelector:@selector(NudgesSubmitByScore:thumns:)]) {
-      [_delegate NudgesSubmitByScore:score thumns:0];
-    }
-  }
+	//  if (_delegate && [_delegate conformsToProtocol:@protocol(NudgesEventDelegate)]) {
+	//    if (_delegate && [_delegate respondsToSelector:@selector(NudgesSubmitByScore:thumns:)]) {
+	//      [_delegate NudgesSubmitByScore:score thumns:0];
+	//    }
+	//  }
 }
 
 #pragma mark -- FeedBackEventDelegate
-- (void)FeedBackClickEventByType:(KButtonsUrlJumpType)jumpType Url:(NSString *)url invokeAction:(nonnull NSString *)invokeAction buttonName:(nonnull NSString *)buttonName model:(nonnull NudgesBaseModel *)model {
-//  if (_delegate && [_delegate conformsToProtocol:@protocol(FeedBackEventDelegate)]) {
-//    if (_delegate && [_delegate respondsToSelector:@selector(NudgesClickEventByType:jumpType:url:)]) {
-//      [_delegate NudgesClickEventByType:KNudgesType_Forms jumpType:jumpType url:url];
-//    }
-//  }
-  
-  NSString *nudgesId = [NSString stringWithFormat:@"%ld",(long)model.nudgesId];
-  NSString *nudgesName = isEmptyString_Nd(model.nudgesName)?@"":model.nudgesName;
-  // 发送通知到RN
-  [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"ButtonClickEvent",@"body":@{@"nudgesId":nudgesId,@"nudgesName":nudgesName,@"nudgesType":@(model.nudgesType),@"buttonName":buttonName,@"invokeAction":invokeAction,@"url":url,@"schemeType":@(jumpType),@"eventTypeId":@"onNudgesButtonClick"}}];
-  
+- (void)FeedBackClickEventByActionModel:(ActionModel *)actionModel isClose:(BOOL)isClose buttonName:(NSString *)buttonName optionList:(NSMutableArray *)optionList FeedBackText:(NSString *)FeedBackText nudgeModel:(NudgesBaseModel *)model comments:(nonnull NSString *)comments feedbackDuration:(NSInteger)feedbackDuration {
+	// 记录反馈时长
+	self.feedbackDuration = feedbackDuration;
+	
+	if (self.buttonClickEventBlock) {
+		self.buttonClickEventBlock(actionModel, isClose, buttonName, FeedBackText, model);
+	}
+	
+	if (self.feedBackEventBlock) {
+		self.feedBackEventBlock(model, @"0", @"1", @"", optionList, @"", comments);
+	}
 }
+
+// nudges显示出来后回调代理
+- (void)FeedBackShowEventByNudgesModel:(NudgesBaseModel *)model batchId:(NSString *)batchId source:(NSString *)source {
+	if (self.nudgesShowEventBlock) {
+		self.nudgesShowEventBlock(model, batchId, source);
+	}
+}
+
 
 #pragma mark -- RateEventDelegate
-- (void)RateClickEventByType:(KButtonsUrlJumpType)jumpType Url:(NSString *)url invokeAction:(NSString *)invokeAction buttonName:(NSString *)buttonName model:(NudgesBaseModel *)model {
-//  if (_delegate && [_delegate conformsToProtocol:@protocol(RateEventDelegate)]) {
-//    if (_delegate && [_delegate respondsToSelector:@selector(NudgesClickEventByType:jumpType:url:)]) {
-//      [_delegate NudgesClickEventByType:KNudgesType_Rate jumpType:jumpType url:url];
-//    }
-//  }
-  
-  NSString *nudgesId = [NSString stringWithFormat:@"%ld",(long)model.nudgesId];
-  NSString *nudgesName = isEmptyString_Nd(model.nudgesName)?@"":model.nudgesName;
-  // 发送通知到RN
-  [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"ButtonClickEvent",@"body":@{@"nudgesId":nudgesId,@"nudgesName":nudgesName,@"nudgesType":@(model.nudgesType),@"buttonName":buttonName,@"invokeAction":invokeAction,@"url":url,@"schemeType":@(jumpType),@"eventTypeId":@"onNudgesButtonClick"}}];
+- (void)RateClickEventByActionModel:(ActionModel *)actionModel isClose:(BOOL)isClose buttonName:(NSString *)buttonName score:(NSString *)score thumbResult:(NSString *)thumbResult comments:(NSString *)comments nudgeModel:(NudgesBaseModel *)model feedbackDuration:(NSInteger)feedbackDuration {
+	
+	// 记录反馈时长
+	self.feedbackDuration = feedbackDuration;
+	
+	if (self.buttonClickEventBlock) {
+		self.buttonClickEventBlock(actionModel, isClose, buttonName, @"", model);
+	}
+	
+	if (self.feedBackEventBlock) {
+		self.feedBackEventBlock(model, @"0", @"1", score, @[].mutableCopy, thumbResult, comments);
+	}
 }
 
+// nudges显示出来后回调代理
+- (void)RateShowEventByNudgesModel:(NudgesBaseModel *)model batchId:(NSString *)batchId source:(NSString *)source {
+	if (self.nudgesShowEventBlock) {
+		self.nudgesShowEventBlock(model, batchId, source);
+	}
+}
+
+
 - (void)RateSubmitByScore:(double)score thumb:(NSInteger)thumbsScore {
-  if (_delegate && [_delegate conformsToProtocol:@protocol(RateEventDelegate)]) {
-    if (_delegate && [_delegate respondsToSelector:@selector(NudgesSubmitByScore:thumns:)]) {
-      [_delegate NudgesSubmitByScore:score thumns:thumbsScore];
-    }
-  }
+	//  if (_delegate && [_delegate conformsToProtocol:@protocol(RateEventDelegate)]) {
+	//    if (_delegate && [_delegate respondsToSelector:@selector(NudgesSubmitByScore:thumns:)]) {
+	//      [_delegate NudgesSubmitByScore:score thumns:thumbsScore];
+	//    }
+	//  }
 }
 
 #pragma mark -- AnnouncementEventDelegate
-- (void)AnnouncementSubmitByScore:(NSInteger)score {
-  if (_delegate && [_delegate conformsToProtocol:@protocol(NudgesEventDelegate)]) {
-    if (_delegate && [_delegate respondsToSelector:@selector(NudgesSubmitByScore:thumns:)]) {
-      [_delegate NudgesSubmitByScore:score thumns:0];
-    }
-  }
+//- (void)AnnouncementSubmitByScore:(NSInteger)score {
+	//  if (_delegate && [_delegate conformsToProtocol:@protocol(NudgesEventDelegate)]) {
+	//    if (_delegate && [_delegate respondsToSelector:@selector(NudgesSubmitByScore:thumns:)]) {
+	//      [_delegate NudgesSubmitByScore:score thumns:0];
+	//    }
+	//  }
+//}
+
+- (void)AnnouncementClickEventByActionModel:(ActionModel *)actionModel isClose:(BOOL)isClose buttonName:(NSString *)buttonName nudgeModel:(NudgesBaseModel *)model {
+	if (self.buttonClickEventBlock) {
+		self.buttonClickEventBlock(actionModel, isClose, buttonName, @"" ,model);
+	}
 }
 
-- (void)AnnouncementClickEventByType:(KButtonsUrlJumpType)jumpType Url:(NSString *)url invokeAction:(nonnull NSString *)invokeAction buttonName:(nonnull NSString *)buttonName model:(nonnull NudgesBaseModel *)model {
-//  if (_delegate && [_delegate conformsToProtocol:@protocol(NudgesEventDelegate)]) {
-//    if (_delegate && [_delegate respondsToSelector:@selector(NudgesClickEventByType:jumpType:url:)]) {
-//      [_delegate NudgesClickEventByType:KNudgesType_FunnelReminders jumpType:jumpType url:url];
-//    }
-//  }
-  
-  NSString *nudgesId = [NSString stringWithFormat:@"%ld",(long)model.nudgesId];
-  NSString *nudgesName = isEmptyString_Nd(model.nudgesName)?@"":model.nudgesName;
-  // 发送通知到RN
-  [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"ButtonClickEvent",@"body":@{@"nudgesId":nudgesId,@"nudgesName":nudgesName,@"nudgesType":@(model.nudgesType),@"buttonName":buttonName,@"invokeAction":invokeAction,@"url":url,@"schemeType":@(jumpType),@"eventTypeId":@"onNudgesButtonClick"}}];
-  
+// nudges显示出来后回调代理
+- (void)AnnouncementShowEventByNudgesModel:(NudgesBaseModel *)model batchId:(NSString *)batchId source:(NSString *)source {
+	if (self.nudgesShowEventBlock) {
+		self.nudgesShowEventBlock(model, batchId, source);
+	}
 }
 
 #pragma mark -- 上报数据
@@ -1090,7 +1101,7 @@ static HJNudgesManager *manager = nil;
     @"thumbResult":thumbResult,
     @"options":options,
     @"comments":comments,
-    @"feedbackDuration":feedbackDuration
+		@"feedbackDuration":@(self.feedbackDuration)
   };
   [[NdHJHttpSessionManager sharedInstance] sendRequest:request complete:^(NdHJHttpReponse * _Nonnull response) {
     if (!response.serverError) {
@@ -1411,6 +1422,56 @@ static HJNudgesManager *manager = nil;
         [[HJNudgesManager sharedInstance] connectWebSocketByConfigCode:configCode];
       }
     }
+}
+
+// 上报设备信息
+- (void)uploadDeviceInfoWithMatchCode:(NSString *)matchCode {
+	// 获取设备device Id
+	UIDevice *currentDevice = [UIDevice currentDevice];
+	NSString *deviceId = [[currentDevice identifierForVendor] UUIDString];
+	if (isEmptyString_Nd(matchCode) || isEmptyString_Nd(deviceId)) {
+		NSLog(@"设备匹配码或者Device ID不能为空");
+		return;
+	}
+	// 获取设备品牌
+	NSString *brand = [self getCurrentDeviceModel];
+	// 获取设备系统信息
+	NSString *os = @"IOS";
+	// 获取设备系统版本
+	NSString *osVersion = [[UIDevice currentDevice] systemVersion];
+	NSLog(@"\n  设备基本信息:\n  MatchCode:%@ \n  Device ID:%@ \n  Brand:%@ \n  OS:%@ \n  OsVersion:%@ ",matchCode,deviceId,brand,os,osVersion);
+	
+	// 调用上传接口 /mccm/nudges/device/match 进行匹配
+	NdHJHttpRequest *request = [[NdHJHttpRequest alloc] init];
+	request.httpMethod = NdHJHttpMethodPOST;
+	NSString *reqUrl = [NSString stringWithFormat:@"%@nudges/device/match",self.configParametersModel.baseUrl];
+	request.requestUrl = reqUrl;
+	request.requestParams = @{
+		@"matchCode": matchCode,
+		@"deviceCode": deviceId,
+		@"brand": isEmptyString_Nd(brand)?@"":brand,
+		@"os": @"iOS",
+		@"width": [NSString stringWithFormat:@"%ld",(long)kScreenWidth],
+		@"height": [NSString stringWithFormat:@"%ld",(long)kScreenHeight],
+	};
+	[[NdHJHttpSessionManager sharedInstance] sendRequest:request complete:^(NdHJHttpReponse * _Nonnull response) {
+		if (!response.serverError) {
+			NSString *code = [response.responseObject objectForKey:@"code"];
+			NSString *msg = @"";
+			if ([code isEqualToString:@"MCCM-NUDGES-SUCC-000"]) {
+				msg = @"Matching success";
+			} else if ([code isEqualToString:@"MCCM-NUDGES-ERR-001"]) {
+				msg = @"Pairing operation timeout";
+			} else if ([code isEqualToString:@"MCCM-NUDGES-ERR-002"]) {
+				msg = @"Pairing anomalies";
+			} else {
+				msg = [response.responseObject objectForKey:@"msg"];
+			}
+			[SNAlertMessage displayMessageInView:[TKUtils topViewController].view Message:msg];
+		} else {
+			[SNAlertMessage displayMessageInView:[TKUtils topViewController].view Message:@"Device binding exception"];
+		}
+	}];
 }
 
 - (NSDictionary *)paramerWithURL:(NSURL *) url {

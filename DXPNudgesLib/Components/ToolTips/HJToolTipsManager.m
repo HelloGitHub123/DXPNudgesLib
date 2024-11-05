@@ -36,7 +36,7 @@ static HJToolTipsManager *manager = nil;
 @interface HJToolTipsManager ()<CMPopTipViewDelegate, MonolayerViewDelegate> {
 }
 
-@property (nonatomic, strong) NSMutableArray *visiblePopTipViews;
+//@property (nonatomic, strong) NSMutableArray *visiblePopTipViews;
 @property (nonatomic, strong) dispatch_source_t timer;
 // 播放器
 @property (nonatomic, strong) ZFPlayerController *player;
@@ -61,55 +61,48 @@ static HJToolTipsManager *manager = nil;
 - (instancetype)init {
 	self = [super init];
 	if (self) {
-		self.visiblePopTipViews = [[NSMutableArray alloc] init];
+//		self.visiblePopTipViews = [[NSMutableArray alloc] init];
 	}
 	return self;
 }
 
+// 按钮事件
 - (void)ButtonClickAction:(id)sender {
 	UIButton *btn = (UIButton *)sender;
 	for (int i = 0; i< [_baseModel.buttonsModel.buttonList count]; i ++) {
 		ButtonItem *item = [_baseModel.buttonsModel.buttonList objectAtIndex:i];
+		BOOL isClose = NO;// 是否关闭按钮
 		if (item.itemTag == btn.tag) {
 			if (KButtonsActionType_CloseNudges == item.action.type) {
 				// 关闭Nudges
-				[self stopCurrentPlayingView]; // 停止播放器
-				[self removeNudges];
-				[self removeMonolayer];
-				[self stopTimer];
-				[[HJNudgesManager sharedInstance] showNextNudges];
-
+				isClose = YES;
 			} else if (KBorderStyle_LaunchURL == item.action.type) {
-				// 内部跳转
-				if (isEmptyString_Nd(item.action.url)) {
-					return;
-				}
-				if (_delegate && [_delegate conformsToProtocol:@protocol(ToolTipsEventDelegate)]) {
-          if (_delegate && [_delegate respondsToSelector:@selector(ToolTipsClickEventByType:Url:invokeAction:buttonName:model:)]) {
-            
-            // 神策埋点
-            NSString *contactId = isEmptyString_Nd(_baseModel.contactId)?@"":_baseModel.contactId;
-            NSString *nudgesName = isEmptyString_Nd(_baseModel.nudgesName)?@"":_baseModel.nudgesName;
-            NSString *pageName = isEmptyString_Nd(_baseModel.pageName)?@"":_baseModel.pageName;
-            NSString *text = isEmptyString_Nd(item.text.content)?@"":item.text.content;
-            NSString *url = isEmptyString_Nd(item.action.url)?@"":item.action.url;
-            NSString *invokeAction = isEmptyString_Nd(item.action.invokeAction)?@"":item.action.invokeAction;
-            
-						[_delegate ToolTipsClickEventByType:item.action.urlJumpType Url:item.action.url invokeAction:invokeAction buttonName:text model:self.baseModel];
-            
-            // 埋点发送通知给RN
-            [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"NudgeClick",@"body":@{@"nudgesId":@(_baseModel.nudgesId),@"nudgesName":nudgesName,@"contactId":_baseModel.contactId,@"campaignCode":@(_baseModel.campaignId),@"batchId":@"",@"source":@"1",@"pageName":pageName}}];
-            
-					}
-				}
-				[self stopCurrentPlayingView]; // 停止播放器
-				[self removeNudges];
-				[self removeMonolayer];
-				[self stopTimer]; // 停止定时器
-				
+				// URL跳转 内部webview or app 浏览器 or 内部浏览器
 			} else if (KBorderStyle_InvokeAction == item.action.type) {
-				// 调用方法
+				// 提交 提交反馈 or 跳转app store
 			}
+			
+			[self stopCurrentPlayingView]; // 停止播放器
+			[self removeNudges];
+			[self removeMonolayer];
+			[self stopTimer]; // 停止定时器
+			[[HJNudgesManager sharedInstance] showNextNudges];
+			
+			//  按钮点击事件 回调
+			NSString *contactId = isEmptyString_Nd(_baseModel.contactId)?@"":_baseModel.contactId;
+			NSString *nudgesName = isEmptyString_Nd(_baseModel.nudgesName)?@"":_baseModel.nudgesName;
+			NSString *pageName = isEmptyString_Nd(_baseModel.pageName)?@"":_baseModel.pageName;
+			NSString *text = isEmptyString_Nd(item.text.content)?@"":item.text.content;
+			NSString *url = isEmptyString_Nd(item.action.url)?@"":item.action.url;
+			NSString *invokeAction = isEmptyString_Nd(item.action.invokeAction)?@"":item.action.invokeAction;
+			// 原生回调
+			if (_delegate && [_delegate conformsToProtocol:@protocol(ToolTipsEventDelegate)]) {
+				if (_delegate && [_delegate respondsToSelector:@selector(ToolTipsClickEventByActionModel:isClose:buttonName:nudgeModel:)]) {
+					[_delegate ToolTipsClickEventByActionModel:item.action isClose:isClose buttonName:text nudgeModel:self.baseModel];
+				}
+			}
+			// 埋点发送通知给RN
+			[[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"NudgeClick",@"body":@{@"nudgesId":@(_baseModel.nudgesId),@"nudgesName":nudgesName,@"contactId":contactId,@"campaignCode":@(_baseModel.campaignId),@"batchId":@"0",@"jumpUrl":url,@"invokeAction":invokeAction,@"isClose":@(isClose),@"buttonName":text,@"source":@"1",@"pageName":pageName}}];
 		}
 	}
 }
@@ -146,24 +139,25 @@ static HJToolTipsManager *manager = nil;
 
 // 移除ToolTips
 - (void)removeNudges {
-	if ([self.visiblePopTipViews count] > 0) {
-		CMPopTipView *popTipView = [self.visiblePopTipViews objectAtIndex:0];
+	if ([[HJNudgesManager sharedInstance].visiblePopTipViews count] > 0) {
+		CMPopTipView *popTipView = [[HJNudgesManager sharedInstance].visiblePopTipViews objectAtIndex:0];
 		[popTipView dismissAnimated:YES];
-		[self.visiblePopTipViews removeObjectAtIndex:0];
+		[[HJNudgesManager sharedInstance].visiblePopTipViews removeObjectAtIndex:0];
 		[self stopCurrentPlayingView];
 		// 寻找下一个nudges
+		
 		[[HJNudgesManager sharedInstance] showNextNudges];
 	}
 }
 
 // 删除预览的nudges
 - (void)removePreviewNudges {
-  if ([self.visiblePopTipViews count] > 0) {
-    CMPopTipView *popTipView = [self.visiblePopTipViews objectAtIndex:0];
-    [popTipView dismissAnimated:YES];
-    [self.visiblePopTipViews removeObjectAtIndex:0];
-    [self stopCurrentPlayingView];
-  }
+	if ([[HJNudgesManager sharedInstance].visiblePopTipViews count] > 0) {
+		CMPopTipView *popTipView = [[HJNudgesManager sharedInstance].visiblePopTipViews objectAtIndex:0];
+		[popTipView dismissAnimated:YES];
+		[[HJNudgesManager sharedInstance].visiblePopTipViews removeObjectAtIndex:0];
+		[self stopCurrentPlayingView];
+	}
 }
 
 // 停止播放，并且移除播放器
@@ -1173,25 +1167,27 @@ static HJToolTipsManager *manager = nil;
 	[[TKUtils topViewController].tabBarController.view bringSubviewToFront:view];
 	
 	[popTipView presentPointingAtView:view inView:[TKUtils topViewController].view animated:NO];
-  
-  
-  // 神策埋点
-  NSString *contactId = isEmptyString_Nd(baseModel.contactId)?@"":baseModel.contactId;
-  NSString *nudgesName = isEmptyString_Nd(baseModel.nudgesName)?@"":baseModel.nudgesName;
-  NSString *pageName = isEmptyString_Nd(baseModel.pageName)?@"":baseModel.pageName;
-  
-  // 发送通知给RN
-  [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"NudgesShowEvent",@"body":@{@"nudgesId":contactId,@"nudgesName":nudgesName,@"nudgesType":@(baseModel.nudgesType),@"eventTypeId":@"onNudgesShow"}}];
-  
-  // 埋点发送通知给RN
-  [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"NudgeShow",@"body":@{@"nudgesId":@(baseModel.nudgesId),@"nudgesName":nudgesName,@"contactId":baseModel.contactId,@"campaignCode":@(baseModel.campaignId),@"batchId":@"",@"source":@"1",@"pageName":pageName}}];
-  
+	
+	
+	// 显示回调
+	if (_delegate && [_delegate conformsToProtocol:@protocol(ToolTipsEventDelegate)]) {
+		if (_delegate && [_delegate respondsToSelector:@selector(ToolTipsShowEventByNudgesModel:batchId:source:)]) {
+			[_delegate ToolTipsShowEventByNudgesModel:baseModel batchId:@"0" source:@"1"];
+		}
+	}
+	
+	NSString *contactId = isEmptyString_Nd(baseModel.contactId)?@"":baseModel.contactId;
+	NSString *nudgesName = isEmptyString_Nd(baseModel.nudgesName)?@"":baseModel.nudgesName;
+	NSString *pageName = isEmptyString_Nd(baseModel.pageName)?@"":baseModel.pageName;
+	// 埋点发送通知给RN
+	[[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"NudgeShow",@"body":@{@"nudgesId":@(baseModel.nudgesId),@"nudgesType":@(baseModel.nudgesType),@"nudgesName":nudgesName,@"contactId":contactId,@"campaignCode":@(baseModel.campaignId),@"batchId":@"0",@"source":@"1",@"pageName":pageName}}];
+	
 	
 	// 显示后上报接口
-	[[HJNudgesManager sharedInstance] nudgesContactRespByNudgesId:baseModel.nudgesId contactId:baseModel.contactId];
+//	[[HJNudgesManager sharedInstance] nudgesContactRespByNudgesId:baseModel.nudgesId contactId:baseModel.contactId];
 	
-	[self.visiblePopTipViews addObject:popTipView];
-
+	[[HJNudgesManager sharedInstance].visiblePopTipViews addObject:popTipView];
+	
 	// dismissButton A,B,C
 	if ([baseModel.dismiss containsString:@"C"] || isEmptyString_Nd(baseModel.dismiss)) {
 		self.monolayerView.isTouch = YES;
@@ -1252,7 +1248,7 @@ static HJToolTipsManager *manager = nil;
 
 #pragma mark - UIViewController methods
 - (void)willAnimateRotationToInterfaceOrientation:(__unused UIInterfaceOrientation)toInterfaceOrientation duration:(__unused NSTimeInterval)duration {
-	for (CMPopTipView *popTipView in self.visiblePopTipViews) {
+	for (CMPopTipView *popTipView in [HJNudgesManager sharedInstance].visiblePopTipViews) {
 		id targetObject = popTipView.targetObject;
 		[popTipView dismissAnimated:NO];
 

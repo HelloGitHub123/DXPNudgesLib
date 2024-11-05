@@ -14,11 +14,19 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol AnnouncementEventDelegate <NSObject>
 
 /// eg: 按钮点击事件
-/// @param jumpType 跳转类型
-/// @param url 跳转路由 or 路径
-- (void)AnnouncementClickEventByType:(KButtonsUrlJumpType)jumpType Url:(NSString *)url invokeAction:(NSString *)invokeAction buttonName:(NSString *)buttonName model:(NudgesBaseModel *)model;
+- (void)AnnouncementClickEventByActionModel:(ActionModel *)actionModel isClose:(BOOL)isClose buttonName:(NSString *)buttonName nudgeModel:(NudgesBaseModel *)model;
+
 /// eg:提交评分
 - (void)AnnouncementSubmitByScore:(NSInteger)score;
+
+// nudges显示出来后回调代理
+//- (void)AnnouncementShowEventByNudgesId:(NSInteger)nudgesId nudgesName:(NSString *)nudgesName nudgesType:(KNudgesType)nudgesType eventTypeId:(NSString *)eventTypeId contactId:(NSString *)contactId campaignCode:(NSInteger)campaignCode batchId:(NSString *)batchId source:(NSString *)source pageName:(NSString *)pageName;
+
+
+// nudges显示出来后回调代理
+- (void)AnnouncementShowEventByNudgesModel:(NudgesBaseModel *)model batchId:(NSString *)batchId source:(NSString *)source;
+
+
 @end
 
 @interface HJAnnouncementManager : NSObject

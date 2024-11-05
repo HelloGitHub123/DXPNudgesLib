@@ -8,13 +8,7 @@
 #import "HJAnnouncementManager.h"
 #import "NdHJNudgesDBManager.h"
 #import "NdHJIntroductManager.h"
-#import "CMPopTipView.h"
 #import "UIView+NdAddGradualLayer.h"
-#import <ZFPlayer/ZFAVPlayerManager.h>
-#import <ZFPlayer/ZFIJKPlayerManager.h>
-#import <ZFPlayer/ZFPlayerControlView.h>
-#import <ZFPlayer/UIView+ZFFrame.h>
-#import <ZFPlayer/ZFPlayerConst.h>
 #import "UIImageView+ZFCache.h"
 #import "ZFUtilities.h"
 #import "ZFCustomControlView.h"
@@ -28,14 +22,14 @@
 
 static HJAnnouncementManager *manager = nil;
 
-@interface HJAnnouncementManager ()<CMPopTipViewDelegate, MonolayerViewDelegate> {
+@interface HJAnnouncementManager ()<MonolayerViewDelegate> {
     
 }
-@property (nonatomic, strong) NSMutableArray *visiblePopTipViews;
+//@property (nonatomic, strong) NSMutableArray *visiblePopTipViews;
 @property (nonatomic, strong) UIImageView *containerView;
-@property (nonatomic, strong) dispatch_source_t timer;
+//@property (nonatomic, strong) dispatch_source_t timer;
 
-@property (nonatomic, strong) ZFPlayerController *player;
+//@property (nonatomic, strong) ZFPlayerController *player;
 @property (nonatomic, strong) ZFCustomControlView *controlView;
 @property (nonatomic, strong) UIView *customView;
 @property (nonatomic, strong) UIView *backView;
@@ -55,111 +49,67 @@ static HJAnnouncementManager *manager = nil;
 - (instancetype)init {
     self = [super init];
     if (self) {
-        self.visiblePopTipViews = [[NSMutableArray alloc] init];
+//        self.visiblePopTipViews = [[NSMutableArray alloc] init];
     }
     return self;
 }
 
+// 按钮事件
 - (void)ButtonClickAction:(id)sender {
     UIButton *btn = (UIButton *)sender;
     for (int i = 0; i< [_baseModel.buttonsModel.buttonList count]; i ++) {
         ButtonItem *item = [_baseModel.buttonsModel.buttonList objectAtIndex:i];
+		BOOL isClose = NO;// 是否关闭按钮
         if (item.itemTag == btn.tag) {
             if (KButtonsActionType_CloseNudges == item.action.type) {
                 // 关闭Nudges
-                if (_baseModel.positionModel.position == KPosition_Middle) {
-                    if (self.customView) {
-                        [self.customView removeFromSuperview];
-                        self.customView = nil;
-                    }
-                }
-                if (_baseModel.positionModel.position == KPosition_bottom) {
-                    if (self.backView) {
-                        [self.backView removeFromSuperview];
-                        self.backView = nil;
-                    }
-                }
-                
-                [self stopCurrentPlayingView]; // 停止播放器
-                [self removeNudges];
-                [self removeMonolayer];
-                [self stopTimer];
-                [[HJNudgesManager sharedInstance] showNextNudges];
-                
-                
-
+				isClose = YES;
             } else if (KBorderStyle_LaunchURL == item.action.type) {
-                // 内部跳转
-                if (isEmptyString_Nd(item.action.url)) {
-                    return;
-                }
-                if (_delegate && [_delegate conformsToProtocol:@protocol(AnnouncementEventDelegate)]) {
-                  if (_delegate && [_delegate respondsToSelector:@selector(AnnouncementClickEventByType:Url:invokeAction:buttonName:model:)]) {
-                    //                        [_delegate AnnouncementClickEventByType:item.action.urlJumpType Url:item.action.url];
-                  
-                    // 神策埋点
-                    NSString *contactId = isEmptyString_Nd(_baseModel.contactId)?@"":_baseModel.contactId;
-                    NSString *nudgesName = isEmptyString_Nd(_baseModel.nudgesName)?@"":_baseModel.nudgesName;
-                    NSString *pageName = isEmptyString_Nd(_baseModel.pageName)?@"":_baseModel.pageName;
-                    NSString *text = isEmptyString_Nd(item.text.content)?@"":item.text.content;
-                    NSString *url = isEmptyString_Nd(item.action.url)?@"":item.action.url;
-                    NSString *invokeAction = isEmptyString_Nd(item.action.invokeAction)?@"":item.action.invokeAction;
-                    
-                    [_delegate AnnouncementClickEventByType:item.action.urlJumpType Url:item.action.url invokeAction:invokeAction buttonName:text model:self.baseModel];
-                    
-                    // 埋点发送通知给RN
-                    [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"NudgeClick",@"body":@{@"nudgesId":@(_baseModel.nudgesId),@"nudgesName":nudgesName,@"contactId":_baseModel.contactId,@"campaignCode":@(_baseModel.campaignId),@"batchId":@"",@"source":@"1",@"pageName":pageName}}];
-                  }
-                }
-                if (_baseModel.positionModel.position == KPosition_Middle) {
-                    if (self.customView) {
-                        [self.customView removeFromSuperview];
-                        self.customView = nil;
-                    }
-                }
-                if (_baseModel.positionModel.position == KPosition_bottom) {
-                    if (self.backView) {
-                        [self.backView removeFromSuperview];
-                        self.backView = nil;
-                    }
-                }
-                [self stopCurrentPlayingView]; // 停止播放器
-                [self removeNudges];
-                [self removeMonolayer];
-                [self stopTimer]; // 停止定时器
-                
+				isClose = NO;
             } else if (KBorderStyle_InvokeAction == item.action.type) {
                 // 调用方法
-                if ([item.action.invokeAction isEqualToString:@"OPEN_APP_STORE"]) {
-                    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"itms-apps://itunes.apple.com/app/id6465894875"] options:@{} completionHandler:^(BOOL success) {
-                    }];
-                    // 调用方法 feedback
-                    if (_delegate && [_delegate conformsToProtocol:@protocol(AnnouncementEventDelegate)]) {
-                        if (_delegate && [_delegate respondsToSelector:@selector(AnnouncementSubmitByScore:)]) {
-                            [_delegate AnnouncementSubmitByScore:0];
-                        }
-                    }
-                    
-                    // 关闭Nudges
-                    if (_baseModel.positionModel.position == KPosition_Middle) {
-                        if (self.customView) {
-                            [self.customView removeFromSuperview];
-                            self.customView = nil;
-                        }
-                    }
-                    if (_baseModel.positionModel.position == KPosition_bottom) {
-                        if (self.backView) {
-                            [self.backView removeFromSuperview];
-                            self.backView = nil;
-                        }
-                    }
-                    
-                    [self stopCurrentPlayingView]; // 停止播放器
-                    [self removeNudges];
-                    [self removeMonolayer];
-                    [self stopTimer];
-                }
+				isClose = NO;
             }
+			
+			if (_baseModel.positionModel.position == KPosition_Middle) {
+				if (self.customView) {
+					[self.customView removeFromSuperview];
+					self.customView = nil;
+				}
+			}
+			if (_baseModel.positionModel.position == KPosition_bottom) {
+				if (self.backView) {
+					[self.backView removeFromSuperview];
+					self.backView = nil;
+				}
+			}
+			
+//			[self stopCurrentPlayingView]; // 停止播放器
+			[self removeNudges];
+			[self removeMonolayer];
+//			[self stopTimer];
+			
+			[[HJNudgesManager sharedInstance] showNextNudges];
+			
+			// 神策埋点
+			NSString *contactId = isEmptyString_Nd(_baseModel.contactId)?@"":_baseModel.contactId;
+			NSString *nudgesName = isEmptyString_Nd(_baseModel.nudgesName)?@"":_baseModel.nudgesName;
+			NSString *pageName = isEmptyString_Nd(_baseModel.pageName)?@"":_baseModel.pageName;
+			NSString *text = isEmptyString_Nd(item.text.content)?@"":item.text.content;
+			NSString *url = isEmptyString_Nd(item.action.url)?@"":item.action.url;
+			NSString *invokeAction = isEmptyString_Nd(item.action.invokeAction)?@"":item.action.invokeAction;
+			
+			if (_delegate && [_delegate conformsToProtocol:@protocol(AnnouncementEventDelegate)]) {
+				if (_delegate && [_delegate respondsToSelector:@selector(AnnouncementClickEventByActionModel:isClose:buttonName:nudgeModel:)]) {
+				  [_delegate AnnouncementClickEventByActionModel:item.action isClose:isClose buttonName:text nudgeModel:_baseModel];
+										
+					// 埋点发送通知给RN
+					[[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"NudgeClick",@"body":@{@"nudgesId":@(_baseModel.nudgesId),@"nudgesName":nudgesName,@"contactId":contactId,@"campaignCode":@(_baseModel.campaignId),@"batchId":@"0",@"jumpUrl":url,@"invokeAction":invokeAction,@"isClose":@(isClose),@"buttonName":text,@"source":@"1",@"pageName":pageName}}];
+					
+					
+			  }
+			}
+			
         }
     }
 }
@@ -183,12 +133,12 @@ static HJAnnouncementManager *manager = nil;
 }
 
 // 停止定时器
-- (void)stopTimer {
-    if (self.timer) {
-        dispatch_source_cancel(self.timer);
-        self.timer = nil;
-    }
-}
+//- (void)stopTimer {
+//    if (self.timer) {
+//        dispatch_source_cancel(self.timer);
+//        self.timer = nil;
+//    }
+//}
 
 // dissMiss 按钮点击事件
 - (void)dissMissButtonClick:(id)sender {
@@ -203,11 +153,14 @@ static HJAnnouncementManager *manager = nil;
 
 // 移除ToolTips
 - (void)removeNudges {
-    if ([self.visiblePopTipViews count] > 0) {
-        CMPopTipView *popTipView = [self.visiblePopTipViews objectAtIndex:0];
-        [popTipView dismissAnimated:YES];
-        [self.visiblePopTipViews removeObjectAtIndex:0];
-        [self stopCurrentPlayingView];
+    if ([[HJNudgesManager sharedInstance].visiblePopTipViews count] > 0) {
+        UIView *popView = [[HJNudgesManager sharedInstance].visiblePopTipViews objectAtIndex:0];
+		[popView removeFromSuperview];
+		[popView.subviews enumerateObjectsUsingBlock:^(__kindof UIView * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+			[obj removeFromSuperview];
+		}];
+        [[HJNudgesManager sharedInstance].visiblePopTipViews removeObjectAtIndex:0];
+//        [self stopCurrentPlayingView];
     }
 }
 
@@ -217,13 +170,13 @@ static HJAnnouncementManager *manager = nil;
 }
 
 // 停止播放，并且移除播放器
-- (void)stopCurrentPlayingView {
-    if (self.player) {
-        [self.player stopCurrentPlayingView];
-        self.player = nil;
-        self.controlView = nil;
-    }
-}
+//- (void)stopCurrentPlayingView {
+//    if (self.player) {
+//        [self.player stopCurrentPlayingView];
+//        self.player = nil;
+//        self.controlView = nil;
+//    }
+//}
 
 - (void)showNudgesByWidth:(CGFloat)nWidth height:(CGFloat)nHeight {
     // 背景颜色，目前只支持实色
@@ -280,75 +233,39 @@ static HJAnnouncementManager *manager = nil;
     if (_nudgesModel) {
         [NdHJNudgesDBManager updateNudgesIsShowWithNudgesId:_baseModel.nudgesId model:_nudgesModel];
     }
+	
+	
+	[[HJNudgesManager sharedInstance].visiblePopTipViews addObject:self.customView];
   
   NSString *contactId = isEmptyString_Nd(_baseModel.contactId)?@"":_baseModel.contactId;
   NSString *nudgesName = isEmptyString_Nd(_baseModel.nudgesName)?@"":_baseModel.nudgesName;
   NSString *pageName = isEmptyString_Nd(_baseModel.pageName)?@"":_baseModel.pageName;
-  
-  [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"NudgesShowEvent",@"body":@{@"nudgesId":contactId,@"nudgesName":nudgesName,@"nudgesType":@(_baseModel.nudgesType),@"eventTypeId":@"onNudgesShow"}}];
+	
+	// 回调
+	if (_delegate && [_delegate conformsToProtocol:@protocol(AnnouncementEventDelegate)]) {
+		if (_delegate && [_delegate respondsToSelector:@selector(AnnouncementShowEventByNudgesModel:batchId:source:)]) {
+			[_delegate AnnouncementShowEventByNudgesModel:_baseModel batchId:@"0" source:@"1"];
+		}
+	}
   
   // 埋点发送通知给RN
-  [[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"NudgeShow",@"body":@{@"nudgesId":@(_baseModel.nudgesId),@"nudgesName":nudgesName,@"contactId":contactId,@"campaignCode":@(_baseModel.campaignId),@"batchId":@"",@"source":@"1",@"pageName":pageName}}];
+	[[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"NudgeShow",@"body":@{@"nudgesId":@(_baseModel.nudgesId),@"nudgesType":@(_baseModel.nudgesType),@"nudgesName":nudgesName,@"contactId":contactId,@"campaignCode":@(_baseModel.campaignId),@"batchId":@"0",@"source":@"1",@"pageName":pageName}}];
     
   // 显示后上报接口
-  [[HJNudgesManager sharedInstance] nudgesContactRespByNudgesId:_baseModel.nudgesId contactId:_baseModel.contactId];
+//  [[HJNudgesManager sharedInstance] nudgesContactRespByNudgesId:_baseModel.nudgesId contactId:_baseModel.contactId];
 }
 
 #pragma mark -- 构造nudges数据
 - (void)constructsNudgesViewData:(NudgesBaseModel *)baseModel {
-    // 定位要展示的view
-//    UIView *view = [[NdHJIntroductManager sharedManager] getSubViewWithClassNameInViewController:baseModel.pageName viewClassName:@"UIView" index:0 inView:kAppDelegate.window findIndex:baseModel.findIndex];
-//
-//    if (!view) {
-//        return;
-//    }
-    
-    // 根据返回的findIndex判断是否nudges target
-    __block UIView *view = nil;
-    if (!isEmptyString_Nd(baseModel.findIndex)) {
-        // 获取window 的nodel
-//        UIViewController *VC = [self getCurrentVC];
-        UIViewController *VC = [TKUtils topViewController];
-        NodeModel *nodel = [[NdHJIntroductManager sharedManager] getWindowNode:[UIApplication sharedApplication].delegate.window inViewController:VC index:@""];
-        
-        __block BOOL isExist = NO;
-        NSLog(@"baseModel.appExtInfoModel.accessibilityIdentifier:%@",baseModel.appExtInfoModel.accessibilityIdentifier);
-        
-        NSString *identifier = baseModel.appExtInfoModel.accessibilityIdentifier;
-        NSString *stringWithoutSpace = [identifier stringByReplacingOccurrencesOfString:@" " withString:@""];
-        stringWithoutSpace = [stringWithoutSpace stringByReplacingOccurrencesOfString:@"\n" withString:@""];
-        stringWithoutSpace = [stringWithoutSpace stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-        
-        [self getViewNodeModelByAccessibilityElement:stringWithoutSpace targetView:nodel block:^(NodeModel *nodel) {
-            NSLog(@"halllo------%@",nodel.strAccessibilityIdentifier);
-            view = nodel.targetView;
-            // 判断当前view是否在屏幕中
-            isExist = [TKUtils isDisplayedInScreen:view];
-            if (isExist) {
-                // 在当前屏幕范围中
-            } else {
-                // 不在当前屏幕中 跳过展示下一个nudges
-                [[HJNudgesManager sharedInstance] showNextNudges];
-                return;
-            }
-        }];
-        
-        if (!view || !isExist) {
-            return;
-        }
-    }
-    
-    
+	
     // 展示时间判断
     NSString *dateNow = [TKUtils getFullDateStringWithDate:[NSDate date]];
     if (isEmptyString_Nd(dateNow) || isEmptyString_Nd(baseModel.campaignExpDate)) {
         // 时间是空的，调过时间判断，给予展示
-    } else {
-        if ([TKUtils compareDate:baseModel.campaignExpDate withDate:dateNow] == 1) {
-            // 超过了 活动截止时间 不给展示
-            return;
-        }
-    }
+	} else if ([TKUtils compareDate:baseModel.campaignExpDate withDate:dateNow] == 1) {
+		// 超过了 活动截止时间 不给展示
+		return;
+	}
     
     // 遮罩
     self.monolayerView = [[MonolayerView alloc] init];
@@ -1150,37 +1067,38 @@ static HJAnnouncementManager *manager = nil;
             self.backView = nil;
         }
     }
-    [self stopCurrentPlayingView]; // 停止播放器
+//    [self stopCurrentPlayingView]; // 停止播放器
     [self removeNudges]; // 移除nudges
     [self removeMonolayer]; // 移除蒙层
-    [self stopTimer]; // 停止定时器
+//    [self stopTimer]; // 停止定时器
+	
     [[HJNudgesManager sharedInstance] showNextNudges]; // 展示下一个Nudges
 }
 
 #pragma mark - CMPopTipViewDelegate methods
 // 点击Nudges的代理
-- (void)popTipViewWasDismissedByUser:(CMPopTipView *)popTipView {
-    //    [self.visiblePopTipViews removeObject:popTipView];
-}
+//- (void)popTipViewWasDismissedByUser:(CMPopTipView *)popTipView {
+//    //    [self.visiblePopTipViews removeObject:popTipView];
+//}
 
 #pragma mark - UIViewController methods
-- (void)willAnimateRotationToInterfaceOrientation:(__unused UIInterfaceOrientation)toInterfaceOrientation duration:(__unused NSTimeInterval)duration {
-    for (CMPopTipView *popTipView in self.visiblePopTipViews) {
-        id targetObject = popTipView.targetObject;
-        [popTipView dismissAnimated:NO];
-
-        if ([targetObject isKindOfClass:[UIButton class]]) {
-            UIButton *button = (UIButton *)targetObject;
-            [popTipView presentPointingAtView:button inView:[UIApplication sharedApplication].delegate.window animated:NO];
-        } else if ([targetObject isKindOfClass:[UIView class]]) {
-            UIView *view = (UIView *)targetObject;
-            [popTipView presentPointingAtView:view inView:[UIApplication sharedApplication].delegate.window animated:YES];
-        } else {
-            UIBarButtonItem *barButtonItem = (UIBarButtonItem *)targetObject;
-            [popTipView presentPointingAtBarButtonItem:barButtonItem animated:NO];
-        }
-    }
-}
+//- (void)willAnimateRotationToInterfaceOrientation:(__unused UIInterfaceOrientation)toInterfaceOrientation duration:(__unused NSTimeInterval)duration {
+//    for (CMPopTipView *popTipView in [HJNudgesManager sharedInstance].visiblePopTipViews) {
+//        id targetObject = popTipView.targetObject;
+//        [popTipView dismissAnimated:NO];
+//
+//        if ([targetObject isKindOfClass:[UIButton class]]) {
+//            UIButton *button = (UIButton *)targetObject;
+//            [popTipView presentPointingAtView:button inView:[UIApplication sharedApplication].delegate.window animated:NO];
+//        } else if ([targetObject isKindOfClass:[UIView class]]) {
+//            UIView *view = (UIView *)targetObject;
+//            [popTipView presentPointingAtView:view inView:[UIApplication sharedApplication].delegate.window animated:YES];
+//        } else {
+//            UIBarButtonItem *barButtonItem = (UIBarButtonItem *)targetObject;
+//            [popTipView presentPointingAtBarButtonItem:barButtonItem animated:NO];
+//        }
+//    }
+//}
 
 #pragma mark -- lazy load
 - (UIImageView *)containerView {

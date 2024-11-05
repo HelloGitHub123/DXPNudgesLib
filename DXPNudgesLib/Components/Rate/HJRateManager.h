@@ -13,12 +13,14 @@
 @protocol RateEventDelegate <NSObject>
 
 /// eg: 按钮点击事件
-/// @param jumpType 跳转类型
-/// @param url 跳转路由 or 路径
-- (void)RateClickEventByType:(KButtonsUrlJumpType)jumpType Url:(NSString *)url invokeAction:(NSString *)invokeAction buttonName:(NSString *)buttonName model:(NudgesBaseModel *)model;
+- (void)RateClickEventByActionModel:(ActionModel *)actionModel isClose:(BOOL)isClose buttonName:(NSString *)buttonName score:(NSString *)score thumbResult:(NSString *)thumbResult comments:(NSString *)comments nudgeModel:(NudgesBaseModel *)model feedbackDuration:(NSInteger)feedbackDuration;
+
+// nudges显示出来后回调代理
+- (void)RateShowEventByNudgesModel:(NudgesBaseModel *)model batchId:(NSString *)batchId source:(NSString *)source;
 
 /// eg:提交评分
 - (void)RateSubmitByScore:(double)score thumb:(NSInteger)thumbsScore;
+
 @end
 
 

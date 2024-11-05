@@ -6,38 +6,23 @@
 //  Nudges 管理大单例
 
 #import <Foundation/Foundation.h>
-#import "NudgesBaseModel.h"
-#import "NudgesModel.h"
+
+//#import "NudgesModel.h"
 #import "MonolayerModel.h"
-#import "FrequencyModel.h"
 #import "NudgesConfigParametersModel.h"
+#import "ActionModel.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@protocol NudgesEventDelegate <NSObject>
 
-/// eg: 点击事件
-/// @param nudgesType Nudges类型
-/// @param jumpType 跳转类型
-/// @param url 路径 or 跳转路由
-- (void)NudgesClickEventByType:(KNudgesType)nudgesType jumpType:(KButtonsUrlJumpType)jumpType url:(NSString *)url;
-/// eg: nudges 评分 点赞点踩
-- (void)NudgesSubmitByScore:(double)score thumns:(NSInteger)thumns;
-@end
-
-
+@class NudgesBaseModel;
 @interface HJNudgesManager : NSObject
-
-@property (nonatomic, assign) id<NudgesEventDelegate> delegate;
 
 /// eg: [必须]身份标识身份标识类型： 1、默认mccm dmc  2、ceg
 @property (nonatomic, assign) KSourceType sourceType;
 
 // eg:Nudges 配置参数 模型
 @property (nonatomic, strong) NudgesConfigParametersModel *configParametersModel;
-
-/// 频次model
-@property (nonatomic, strong) FrequencyModel *frequencyModel;
 
 // nudges显示后是否进行上报
 @property (nonatomic, assign) BOOL isReported;
@@ -49,6 +34,39 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) NSDictionary *domTreeDic;
 // 屏幕截图
 @property (nonatomic, strong) UIImage *screenShotImg;
+
+@property (nonatomic, strong) NSMutableArray *visiblePopTipViews;
+/**
+ * 按钮点击事件
+ *  eventName: 事件名称
+ *  bodyDic: 参数字典  包含：nudgesId, nudgesName, nudgesType, buttonName, invokeAction, url, schemeType, eventTypeId
+ *
+ */
+@property (nonatomic, copy) void (^buttonClickEventBlock)(ActionModel *actionModel, BOOL isClose, NSString *buttonName, NSString *inputText, NudgesBaseModel *model1);
+
+/**
+ *  nudegs 展示事件 (兼容埋点事件)
+ *   eventName: 事件名称
+ *   nudgesId: nudgesId
+ *   nudgesName: 名称
+ *   nudgesType：类型
+ *   eventTypeId: 事件ID
+ *   contactId: 工单ID
+ *   campaignCode:活动ID
+ *   pageName: 页面名称
+ */
+@property (nonatomic, copy) void (^nudgesShowEventBlock)(NudgesBaseModel *model, NSString *batchId, NSString *source);
+
+/**
+ * Feedback事件
+ *  eventName: 事件名称
+ *  bodyDic: 参数字典  包含：nudgesId, nudgesName, nudgesType, buttonName, invokeAction, url, schemeType, eventTypeId
+ *  score  评分
+ *  thumbResult  点赞点踩
+ *
+ */
+@property (nonatomic, copy) void (^feedBackEventBlock)(NudgesBaseModel *model, NSString *batchId, NSString *source, NSString *score, NSMutableArray *optionList, NSString *thumbResult, NSString *comments);
+
 
 + (instancetype)sharedInstance;
 
@@ -80,7 +98,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// eg: 数据库根据界面查找Nudges
 /// @param pageName 页面名称
 //- (void)selectNudgesDBWithPageName:(NSMutableArray *)nudgesList;
-- (void)selectNudgesDBWithPageName:(NudgesModel *)model;
+//- (void)selectNudgesDBWithPageName:(NudgesModel *)model;
 
 /// eg:当发生页面重载或者新页面时候，调用
 /// @param pageName 页面名称
