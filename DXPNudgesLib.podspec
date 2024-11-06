@@ -16,7 +16,7 @@ Pod::Spec.new do |spec|
   #
 
   spec.name         = "DXPNudgesLib"
-  spec.version      = "1.0.13"
+  spec.version      = "1.0.14"
   spec.summary      = "DXP DXPNudgesLib."
 
   # This description is used to generate tags and improve search results.
@@ -104,6 +104,9 @@ Pod::Spec.new do |spec|
   #
 
    spec.resource  = "DXPNudgesLib/DB/NdCoreBizDBMigrationManager.bundle"
+   spec.resource_bundles = {
+    'DXPNudgesLib' => ['DXPNudgesLib/Resources/*.*']
+  }
   # spec.resources = "Resources/*.png"
 
   # spec.preserve_paths = "FilesToSave", "MoreFilesToSave"

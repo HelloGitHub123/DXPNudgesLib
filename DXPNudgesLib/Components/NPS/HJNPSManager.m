@@ -144,7 +144,7 @@ static HJNPSManager *manager = nil;
 
 // dissMiss 按钮点击事件
 - (void)dissMissButtonClick:(id)sender {
-    NSLog(@"dissMissButtonClick");
+    NSLog(@"DXPNugges Log:=== dissMissButtonClick");
     [self MonolayerViewClickEventByTarget:self];
 }
 

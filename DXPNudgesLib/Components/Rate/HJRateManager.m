@@ -181,7 +181,7 @@ static HJRateManager *manager = nil;
 
 // dissMiss 按钮点击事件
 - (void)dissMissButtonClick:(id)sender {
-    NSLog(@"dissMissButtonClick");
+    NSLog(@"DXPNugges Log:=== dissMissButtonClick");
     [self MonolayerViewClickEventByTarget:self];
 }
 
@@ -498,7 +498,7 @@ static HJRateManager *manager = nil;
             //self.qcStarView.isJsutDisplay = YES;
 			__weak __typeof(&*self)weakSelf = self;
 			self.qcStarView.sendStarPercent= ^(double data,  NSInteger starNumbers) {
-				NSLog(@"%f",data);
+				NSLog(@"DXPNugges Log:=== %f",data);
 				
 				d_starScore = data;
 				weakSelf.starNumbers = starNumbers;
@@ -526,10 +526,10 @@ static HJRateManager *manager = nil;
             }];
             self.thumbs.sendThumnsVal= ^(int res) {
                 if (res == 1) {
-                    NSLog(@"点赞:%d",res);
+                    NSLog(@"DXPNugges Log:=== kudos:%d",res);
                 }
                 if (res == 2) {
-                    NSLog(@"点踩:%d",res);
+                    NSLog(@"DXPNugges Log:=== point and click:%d",res);
                 }
                 thumbsScore = res;
             };
@@ -801,7 +801,7 @@ static HJRateManager *manager = nil;
             //self.qcStarView.isJsutDisplay = YES;
 			__weak __typeof(&*self)weakSelf = self;
 			self.qcStarView.sendStarPercent= ^(double data, NSInteger starNumbers) {
-				NSLog(@"%f",data);
+				NSLog(@"DXPNugges Log:=== %f",data);
 				d_starScore = data;
 				weakSelf.starNumbers = starNumbers;
 			};
@@ -828,10 +828,10 @@ static HJRateManager *manager = nil;
             }];
             self.thumbs.sendThumnsVal= ^(int res) {
                 if (res == 1) {
-                    NSLog(@"点赞:%d",res);
+                    NSLog(@"DXPNugges Log:=== kudos:%d",res);
                 }
                 if (res == 2) {
-                    NSLog(@"点踩:%d",res);
+                    NSLog(@"DXPNugges Log:=== point and click:%d",res);
                 }
                 thumbsScore = res;
             };
