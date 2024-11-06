@@ -200,6 +200,21 @@ static HJRateManager *manager = nil;
 // 删除预览的nudges
 - (void)removePreviewNudges {
   [self removeNudges];
+  [self removeMonolayer];
+  [self stopTimer];
+  
+  if (_baseModel.positionModel.position == KPosition_Middle) {
+    if (self.customView) {
+      [self.customView removeFromSuperview];
+      self.customView = nil;
+    }
+  }
+  if (_baseModel.positionModel.position == KPosition_bottom) {
+    if (self.backView) {
+      [self.backView removeFromSuperview];
+      self.backView = nil;
+    }
+  }
 }
 
 - (void)showNudgesByWidth:(CGFloat)nWidth height:(CGFloat)nHeight {

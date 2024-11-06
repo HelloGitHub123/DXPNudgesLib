@@ -152,12 +152,17 @@ static HJToolTipsManager *manager = nil;
 
 // 删除预览的nudges
 - (void)removePreviewNudges {
-	if ([[HJNudgesManager sharedInstance].visiblePopTipViews count] > 0) {
-		CMPopTipView *popTipView = [[HJNudgesManager sharedInstance].visiblePopTipViews objectAtIndex:0];
-		[popTipView dismissAnimated:YES];
-		[[HJNudgesManager sharedInstance].visiblePopTipViews removeObjectAtIndex:0];
-		[self stopCurrentPlayingView];
-	}
+  if ([[HJNudgesManager sharedInstance].visiblePopTipViews count] > 0) {
+    CMPopTipView *popTipView = [[HJNudgesManager sharedInstance].visiblePopTipViews objectAtIndex:0];
+    [popTipView dismissAnimated:YES];
+    [[HJNudgesManager sharedInstance].visiblePopTipViews removeObjectAtIndex:0];
+    [self stopCurrentPlayingView];
+  }
+  
+  [self stopCurrentPlayingView]; // 停止播放器
+  [self removeNudges];
+  [self removeMonolayer];
+  [self stopTimer]; // 停止定时器
 }
 
 // 停止播放，并且移除播放器

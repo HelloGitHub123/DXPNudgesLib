@@ -273,6 +273,17 @@ static HJNudgesManager *manager = nil;
   }];
 }
 
+- (void)setCurrentPageName:(NSString *)currentPageName {
+  _currentPageName = currentPageName;
+}
+
+// 页面查询nudges
+- (void)launchNudges {
+  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.8*NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+    [self queryNudgesWithPageName:self.currentPageName];
+  });
+}
+
 // 判断全局频次条件(用于所有Nudges组件)
 - (BOOL)checkGlobalFrequency {
   if (!self.frequencyModel) {
@@ -529,15 +540,6 @@ static HJNudgesManager *manager = nil;
 				break;
 		}
 	}
-}
-
-- (void)setCurrentPageName:(NSString *)currentPageName {
-	_currentPageName = currentPageName;
-	
-	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2*NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-		[self queryNudgesWithPageName:currentPageName];
-	});
-
 }
 
 

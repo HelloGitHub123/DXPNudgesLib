@@ -155,7 +155,14 @@ static HJHotSpotManager *manager = nil;
 
 // 删除预览的nudges
 - (void)removePreviewNudges {
+  // 关闭Nudges
+  [self removeBeaConView];
+  [self stopCurrentPlayingView]; // 停止播放器
   [self removeNudges];
+  [self removeMonolayer];
+  [self stopTimer];
+  [self.popTipView removeFromSuperview];
+  self.popTipView = nil;
 }
 
 // 停止播放，并且移除播放器
