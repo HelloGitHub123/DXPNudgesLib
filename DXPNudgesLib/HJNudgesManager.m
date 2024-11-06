@@ -192,7 +192,7 @@ static HJNudgesManager *manager = nil;
 
 #pragma mark -- 获取Nudges列表
 - (void)requestNudgesListWithModel:(NudgesConfigParametersModel *)model {
-  if (isEmptyString_Nd(model.baseUrl) || isEmptyString_Nd(model.accNbr) || isEmptyString_Nd(self.currentPageName)) {
+  if (isEmptyString_Nd(model.baseUrl) || isEmptyString_Nd(model.accNbr)) {
     return;
   }
   UIDevice *currentDevice = [UIDevice currentDevice];
