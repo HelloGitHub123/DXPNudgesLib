@@ -71,7 +71,7 @@ static FMDatabaseQueue *dbQueue;
     NSFileManager   *fileManager = [NSFileManager defaultManager];
     BOOL userPathExists = [fileManager fileExistsAtPath:userPath];
     
-    NSLog(@"DXPNugges Log:=== Nudges database path:%@",userPath);
+    NSLog(@"DXPNudges Log:=== Nudges database path:%@",userPath);
     if (!userPathExists) {
         [fileManager createDirectoryAtPath:userPath withIntermediateDirectories:YES attributes:nil error:nil];
     }

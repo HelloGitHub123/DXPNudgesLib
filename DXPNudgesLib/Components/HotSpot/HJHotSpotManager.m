@@ -142,7 +142,7 @@ static HJHotSpotManager *manager = nil;
 
 // dissMiss 按钮点击事件
 - (void)dissMissButtonClick:(id)sender {
-    NSLog(@"DXPNugges Log:=== dissMissButtonClick");
+    NSLog(@"DXPNudges Log:=== dissMissButtonClick");
     [self MonolayerViewClickEventByTarget:self];
 }
 

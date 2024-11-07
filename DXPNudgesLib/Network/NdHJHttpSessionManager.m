@@ -62,7 +62,7 @@ static NdHJHttpSessionManager *manager = nil;
         NSString *str = [self sort:request.requestParams];
         //accNbr=9202106404&adviceCode=Nudges&appId=ditoapp&channelCode=Nudges&deviceSystem=IOS&identityId=1135596&identityType=2&random=595212E7-63F3-4794-9368-05AC9E40F90E
         NSString *contentMd5 = [self getmd5WithString:str];// e9d58c5844a19dacd21bd0fa5a0637d7
-        NSLog(@"DXPNugges Log:=== contentMd5:%@",contentMd5);
+        NSLog(@"DXPNudges Log:=== contentMd5:%@",contentMd5);
         NSString *timestamp = [TKUtils timestamp]; // 1662616998718
 //                NSString *timestamp = [NdIMClientChatUtil getNowGMTDateStr];
         NSString *data = [NSString stringWithFormat:@"%@\n%@\n%@",[HJNudgesManager sharedInstance].configParametersModel.appId,contentMd5,timestamp]; // hmacKey:@"MzUzOWQ2YzY4NjJmYWMzOWQ5ZGIxMjFm"]
@@ -76,12 +76,12 @@ static NdHJHttpSessionManager *manager = nil;
         [request.requestHeaderDict setValue:hmacSHA1Sign forKey:@"Authorization"];
         [request.requestHeaderDict setValue:timestamp forKey:@"X-Date"];
       
-        NSLog(@"DXPNugges Log:=== Internationalised language labelling:%@",[HJNudgesManager sharedInstance].configParametersModel.locale);
+        NSLog(@"DXPNudges Log:=== Internationalised language labelling:%@",[HJNudgesManager sharedInstance].configParametersModel.locale);
         NSString *lang = [HJNudgesManager sharedInstance].configParametersModel.locale;
         [request.requestHeaderDict setValue:lang forKey:@"locale"];
       
       
-        NSLog(@"DXPNugges Log:=== token:%@",[HJNudgesManager sharedInstance].configParametersModel.token);
+        NSLog(@"DXPNudges Log:=== token:%@",[HJNudgesManager sharedInstance].configParametersModel.token);
       NSString *token = [HJNudgesManager sharedInstance].configParametersModel.token;
       [request.requestHeaderDict setValue:token forKey:@"token"];
     }
@@ -235,7 +235,7 @@ static NdHJHttpSessionManager *manager = nil;
         return resuest;
     }];
     //排序好的字典
-    NSLog(@"DXPNugges Log:=== afterSortKeyArray:%@",afterSortKeyArray);
+    NSLog(@"DXPNudges Log:=== afterSortKeyArray:%@",afterSortKeyArray);
     NSString *tempStr = @"";
     //通过排列的key值获取value
     NSMutableArray *valueArray = [NSMutableArray array];

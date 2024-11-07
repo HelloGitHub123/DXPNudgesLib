@@ -47,7 +47,7 @@ MJCodingImplementation
                                                         options:NSJSONReadingMutableContainers
                                                           error:&err];
     if(err) {
-        NSLog(@"DXPNugges Log:=== json parsing failure：%@",err);
+        NSLog(@"DXPNudges Log:=== json parsing failure：%@",err);
         return @{};
     }
     return dic;

@@ -165,7 +165,7 @@ static HJFeedBackManager *manager = nil;
 
 // dissMiss 按钮点击事件
 - (void)dissMissButtonClick:(id)sender {
-    NSLog(@"DXPNugges Log:=== dissMissButtonClick");
+    NSLog(@"DXPNudges Log:=== dissMissButtonClick");
     [self MonolayerViewClickEventByTarget:self];
 }
 
@@ -709,7 +709,7 @@ static HJFeedBackManager *manager = nil;
         radioCheckBox.hideTextArray = indexArry;
         radioCheckBox.showTextArray = [baseModel.ownPropModel.textProperties.options copy]; //[NSArray arrayWithObjects:@"option 1",@"option 2",@"option 3",@"option 4", nil];
         [radioCheckBox radioCheckBoxClick:^(NSUInteger index, NSString *showText, NSString *hideText) {
-            NSLog(@"DXPNugges Log:=== index----->%d------>%@------>%@",index,showText,hideText);
+            NSLog(@"DXPNudges Log:=== index----->%d------>%@------>%@",index,showText,hideText);
         }];
         
         CGFloat tHeight = (t_fontSize >= 24 ? t_fontSize: 24);
@@ -751,7 +751,7 @@ static HJFeedBackManager *manager = nil;
         radioCheckBox.hideTextArray = indexArry;
         radioCheckBox.showTextArray = [baseModel.ownPropModel.textProperties.options copy];
         [radioCheckBox multCheckBoxClick:^(NSMutableArray *hideMulitSelectArray) {
-            NSLog(@"DXPNugges Log:=== mulit select %@",hideMulitSelectArray);
+            NSLog(@"DXPNudges Log:=== mulit select %@",hideMulitSelectArray);
         }];
         CGFloat tHeight = (t_fontSize >= 24 ? t_fontSize: 24);
         h_radioCheckbox = count*tHeight  + count* 5;

@@ -255,7 +255,7 @@ static NdHJIntroductManager *manager = nil;
         } else {
         }
     }
-    NSLog(@"DXPNugges Log:=== modeless view%@", result);
+    NSLog(@"DXPNudges Log:=== modeless view%@", result);
     return result;
 }
 
@@ -370,7 +370,7 @@ static NdHJIntroductManager *manager = nil;
         if ([foundView.subviews count] <= index) {
             return nil;
         }
-        NSLog(@"DXPNugges Log:=== foundView.subviews:%@",foundView.subviews);
+        NSLog(@"DXPNudges Log:=== foundView.subviews:%@",foundView.subviews);
         UIView *view = [foundView.subviews objectAtIndex:index];
         if (i == arrlist.count-1) {
             foundView = view;

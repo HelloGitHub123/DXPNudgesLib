@@ -58,7 +58,7 @@
 	_width = width;
 	_height = height;
 	
-	NSLog(@"DXPNugges Log:=== openSocket:flowNo -> %@", flowNo);
+	NSLog(@"DXPNudges Log:=== openSocket:flowNo -> %@", flowNo);
     [self p_registerReceiveMessageAPI:flowNo];
     [_socket open];
 }
@@ -102,7 +102,7 @@
     NSString *urlStr = [NSString stringWithFormat:@"%@nudges/socket?configCode=%@&deviceCode=%@&brand=%@&os=%@&osVersion=%@&width=%@&height=%@",_wsSocketURL,_flowNo, _deviceCode,_brand,_os,_osVersion,_width,_height];
 //	NSString *urlStr = [NSString stringWithFormat:@"%@nudges/socket?configCode=%@&deviceCode=%@",_wsSocketURL,_flowNo, _deviceCode];
     //    NSString * urlStr = [NSString stringWithFormat:@"ws://10.45.98.90:8080/app/websocket/server?flowNo=1234129", flowNo, app_Version];
-	NSLog(@"DXPNugges Log:=== SRWebSocket  initWithURLRequest   urlStr -> %@", urlStr);
+	NSLog(@"DXPNudges Log:=== SRWebSocket  initWithURLRequest   urlStr -> %@", urlStr);
 	NSString *encodedUrlString = [urlStr stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLQueryAllowedCharacterSet]];
     _socket = [[SRWebSocket alloc]initWithURLRequest:
                [NSURLRequest requestWithURL:[NSURL URLWithString:encodedUrlString]]];
@@ -118,7 +118,7 @@
 #pragma mark - sokect delegate
 - (void)webSocketDidOpen:(SRWebSocket *)webSocket {
     
-	NSLog(@"DXPNugges Log:=== websocket connected...");
+	NSLog(@"DXPNudges Log:=== websocket connected...");
     _reconnectCounter = 0;
     _lastPingTime = @"";
     //开始心跳
@@ -128,7 +128,7 @@
 }
 
 - (void)webSocket:(SRWebSocket *)webSocket didReceiveMessageWithString:(NSString *)string {
-    NSLog(@"DXPNugges Log:=== String message received:%@",string);
+    NSLog(@"DXPNudges Log:=== String message received:%@",string);
   // 判断string 是否是有效的json string
   if (![self isValidJSONString:string] && ![string isEqualToString:@"start capture"]) {
       return;
@@ -162,23 +162,23 @@
 
 - (void)webSocket:(SRWebSocket *)webSocket didReceiveMessage:(id)message  {
     if (![message JSONValue] && [message rangeOfString:@"pong"].location != NSNotFound) {
-		NSLog(@"DXPNugges Log:=== ----------Heartbeat. Jump up----------");
+		NSLog(@"DXPNudges Log:=== ----------Heartbeat. Jump up----------");
         _lastPingTime = [NSString getCurrentTimestamp];
         return;
     }
 }
 
 - (void)webSocket:(SRWebSocket *)webSocket didFailWithError:(NSError *)error {
-	NSLog(@"DXPNugges Log:=== Connection failure, here you can achieve the drop automatically reconnect, pay attention to the following points");
-	NSLog(@"DXPNugges Log:=== 1.Judge the current network environment, if the network is disconnected, do not connect, wait for the network to come, in the initiation of reconnection");
-	NSLog(@"DXPNugges Log:=== 2.Determine if the calling layer needs to be connected");
-	NSLog(@"DXPNugges Log:=== 3.There is a limit to the number of connections, so if the connection fails, just retry about 10 times, otherwise it's a dead end. Or every other 1，2，4，8，10，10s reconnect ...f(x) = f(x-1) * 2, (x=5)");
+	NSLog(@"DXPNudges Log:=== Connection failure, here you can achieve the drop automatically reconnect, pay attention to the following points");
+	NSLog(@"DXPNudges Log:=== 1.Judge the current network environment, if the network is disconnected, do not connect, wait for the network to come, in the initiation of reconnection");
+	NSLog(@"DXPNudges Log:=== 2.Determine if the calling layer needs to be connected");
+	NSLog(@"DXPNudges Log:=== 3.There is a limit to the number of connections, so if the connection fails, just retry about 10 times, otherwise it's a dead end. Or every other 1，2，4，8，10，10s reconnect ...f(x) = f(x-1) * 2, (x=5)");
     [self closeSocket];
     [self socketReconnect];
 }
 
 - (void)webSocket:(SRWebSocket *)webSocket didCloseWithCode:(NSInteger)code reason:(NSString *)reason wasClean:(BOOL)wasClean {
-	NSLog(@"DXPNugges Log:=== Disconnect and clear the relevant data");
+	NSLog(@"DXPNudges Log:=== Disconnect and clear the relevant data");
 //    _socket.delegate = nil;
 //    _socket = nil;
     [self closeSocket];
@@ -194,7 +194,7 @@
         [[NSRunLoop currentRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
         self.reTimer = timer;
     } else{
-		NSLog(@"DXPNugges Log:=== Websocket Reconnected Outnumber ReconnectCount");
+		NSLog(@"DXPNudges Log:=== Websocket Reconnected Outnumber ReconnectCount");
         if (self.reTimer) {
             [self closeRetimerSocket];
         }
@@ -216,7 +216,7 @@
 }
 
 - (void)sendData:(NSString *)data {
-	NSLog(@"DXPNugges Log:=== Send socket data:%@",data);
+	NSLog(@"DXPNudges Log:=== Send socket data:%@",data);
 
     __weak __typeof(&*self)weakSelf = self;
     dispatch_queue_t queue =  dispatch_queue_create("zy", NULL);
@@ -225,12 +225,12 @@
         if (weakSelf.socket != nil) {
             // 只有 SR_OPEN 开启状态才能调 send 方法啊，不然要崩
             if (weakSelf.socket.readyState == SR_OPEN) {
-                NSLog(@"DXPNugges Log:=== Nudges Socket sends a message");
+                NSLog(@"DXPNudges Log:=== Nudges Socket sends a message");
                 NSError *err;
                 [weakSelf.socket sendString:data error:&err];    // 发送数据
-                NSLog(@"DXPNugges Log:=== err:%@",err);
+                NSLog(@"DXPNudges Log:=== err:%@",err);
             } else if (weakSelf.socket.readyState == SR_CONNECTING) {
-              NSLog(@"DXPNugges Log:=== Connecting now, after reconnecting other methods will go to auto-sync data");
+              NSLog(@"DXPNudges Log:=== Connecting now, after reconnecting other methods will go to auto-sync data");
                 // 每隔2秒检测一次 socket.readyState 状态，检测 10 次左右
                 // 只要有一次状态是 SR_OPEN 的就调用 [ws.socket send:data] 发送数据
                 // 如果 10 次都还是没连上的，那这个发送请求就丢失了，这种情况是服务器的问题了，小概率的
@@ -238,11 +238,11 @@
                 [self socketReconnect];
             } else if (weakSelf.socket.readyState == SR_CLOSING || weakSelf.socket.readyState == SR_CLOSED) {
                 // websocket 断开了，调用 reConnect 方法重连
-				NSLog(@"DXPNugges Log:=== reconnect");
+				NSLog(@"DXPNudges Log:=== reconnect");
                 [self socketReconnect];
             }
         } else {
-			NSLog(@"DXPNugges Log:=== No network, send failed, once disconnected the socket will be set to nil by me.");
+			NSLog(@"DXPNudges Log:=== No network, send failed, once disconnected the socket will be set to nil by me.");
         }
     });
 }
