@@ -104,6 +104,9 @@ static HJFeedBackManager *manager = nil;
 			
 			NSString *textValue = isEmptyString_Nd(self.textView.contentText)?@"":self.textView.contentText;
 			
+			NSString *schemeType = [NSString stringWithFormat:@"%ld",(long)item.action.urlJumpType];
+			
+			
 			if (_delegate && [_delegate conformsToProtocol:@protocol(FeedBackEventDelegate)]) {
 				if (_delegate && [_delegate respondsToSelector:@selector(FeedBackClickEventByActionModel:isClose:buttonName:optionList:FeedBackText:nudgeModel:comments:feedbackDuration:)]) {
 					// 构造数据
@@ -128,7 +131,7 @@ static HJFeedBackManager *manager = nil;
 			}
 			
 			// 埋点发送通知给RN
-			[[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"NudgeClick",@"body":@{@"nudgesId":@(_baseModel.nudgesId),@"nudgesName":nudgesName,@"contactId":contactId,@"campaignCode":@(_baseModel.campaignId),@"batchId":@"0",@"jumpUrl":url,@"invokeAction":invokeAction,@"isClose":@(isClose),@"buttonName":text,@"source":@"1",@"pageName":pageName,@"textValue":textValue, @"selectedOptionList":self.selectedOptionList}}];
+			[[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"NudgeClick",@"body":@{@"nudgesId":@(_baseModel.nudgesId),@"nudgesName":nudgesName,@"contactId":contactId,@"campaignCode":@(_baseModel.campaignId),@"batchId":@"0",@"jumpUrl":url,@"invokeAction":invokeAction,@"isClose":@(isClose),@"buttonName":text,@"source":@"1",@"pageName":pageName,@"textValue":textValue,@"url":url,@"schemeType":schemeType,@"nudgesType":@(_baseModel.nudgesType),@"selectedOptionList":self.selectedOptionList}}];
 			
         }
     }

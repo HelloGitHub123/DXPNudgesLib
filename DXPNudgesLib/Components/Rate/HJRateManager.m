@@ -135,6 +135,9 @@ static HJRateManager *manager = nil;
 			NSInteger selectedIndex = d_starScore * self.starNumbers;
 			NSString *comments = isEmptyString_Nd(self.textView.contentText)?@"":self.textView.contentText;
 			
+			NSString *schemeType = [NSString stringWithFormat:@"%ld",(long)item.action.urlJumpType];
+		
+			
 			if (_delegate && [_delegate conformsToProtocol:@protocol(RateEventDelegate)]) {
 				if (_delegate && [_delegate respondsToSelector:@selector(RateClickEventByActionModel:isClose:buttonName:score:thumbResult:comments:nudgeModel:feedbackDuration:)]) {
 					
@@ -147,7 +150,7 @@ static HJRateManager *manager = nil;
 			}
 			
 			// 埋点发送通知给RN
-			[[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"NudgeClick",@"body":@{@"nudgesId":@(_baseModel.nudgesId),@"nudgesName":nudgesName,@"contactId":contactId,@"campaignCode":@(_baseModel.campaignId),@"batchId":@"0",@"jumpUrl":url,@"invokeAction":invokeAction,@"isClose":@(isClose),@"buttonName":text,@"source":@"1",@"score":@(selectedIndex),@"thumbResult":thumbsScoreStr,@"comments":comments,@"pageName":pageName}}];
+			[[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"NudgeClick",@"body":@{@"nudgesId":@(_baseModel.nudgesId),@"nudgesName":nudgesName,@"contactId":contactId,@"campaignCode":@(_baseModel.campaignId),@"batchId":@"0",@"jumpUrl":url,@"invokeAction":invokeAction,@"isClose":@(isClose),@"buttonName":text,@"source":@"1",@"score":@(selectedIndex),@"thumbResult":thumbsScoreStr,@"comments":comments,@"url":url,@"schemeType":schemeType,@"nudgesType":@(_baseModel.nudgesType),@"pageName":pageName}}];
 			
 		}
 	}

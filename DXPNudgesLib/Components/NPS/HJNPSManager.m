@@ -98,6 +98,8 @@ static HJNPSManager *manager = nil;
 			NSString *url = isEmptyString_Nd(item.action.url)?@"":item.action.url;
 			NSString *invokeAction = isEmptyString_Nd(item.action.invokeAction)?@"":item.action.invokeAction;
 			NSString *comments = isEmptyString_Nd(self.textView.contentText)?@"":self.textView.contentText;
+			NSString *schemeType = [NSString stringWithFormat:@"%ld",(long)item.action.urlJumpType];
+			
 			
 			if (_delegate && [_delegate conformsToProtocol:@protocol(NPSEventDelegate)]) {
 				if (_delegate && [_delegate respondsToSelector:@selector(NPSClickEventByActionModel:isClose:buttonName:nudgeModel:score:optionList:thumbResult:comments:feedbackDuration:)]) {
@@ -111,7 +113,7 @@ static HJNPSManager *manager = nil;
 			}
 			
 			// 埋点发送通知给RN
-			[[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"NudgeClick",@"body":@{@"nudgesId":@(_baseModel.nudgesId),@"nudgesName":nudgesName,@"contactId":contactId,@"campaignCode":@(_baseModel.campaignId),@"batchId":@"0",@"jumpUrl":url,@"invokeAction":invokeAction,@"isClose":@(isClose),@"buttonName":text,@"source":@"1",@"pageName":pageName,@"score":self.resultNumber,@"comments":comments,@"optionList":@[].mutableCopy,@"thumbResult":@""}}];
+			[[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"NudgeClick",@"body":@{@"nudgesId":@(_baseModel.nudgesId),@"nudgesName":nudgesName,@"contactId":contactId,@"campaignCode":@(_baseModel.campaignId),@"batchId":@"0",@"jumpUrl":url,@"invokeAction":invokeAction,@"isClose":@(isClose),@"buttonName":text,@"source":@"1",@"pageName":pageName,@"url":url,@"schemeType":schemeType,@"nudgesType":@(_baseModel.nudgesType),@"score":self.resultNumber,@"comments":comments,@"optionList":@[].mutableCopy,@"thumbResult":@""}}];
         }
     }
 }

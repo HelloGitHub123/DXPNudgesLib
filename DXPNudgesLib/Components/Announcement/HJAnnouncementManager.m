@@ -99,12 +99,15 @@ static HJAnnouncementManager *manager = nil;
 			NSString *url = isEmptyString_Nd(item.action.url)?@"":item.action.url;
 			NSString *invokeAction = isEmptyString_Nd(item.action.invokeAction)?@"":item.action.invokeAction;
 			
+			NSString *schemeType = [NSString stringWithFormat:@"%ld",(long)item.action.urlJumpType];
+		
+			
 			if (_delegate && [_delegate conformsToProtocol:@protocol(AnnouncementEventDelegate)]) {
 				if (_delegate && [_delegate respondsToSelector:@selector(AnnouncementClickEventByActionModel:isClose:buttonName:nudgeModel:)]) {
 				  [_delegate AnnouncementClickEventByActionModel:item.action isClose:isClose buttonName:text nudgeModel:_baseModel];
 										
 					// 埋点发送通知给RN
-					[[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"NudgeClick",@"body":@{@"nudgesId":@(_baseModel.nudgesId),@"nudgesName":nudgesName,@"contactId":contactId,@"campaignCode":@(_baseModel.campaignId),@"batchId":@"0",@"jumpUrl":url,@"invokeAction":invokeAction,@"isClose":@(isClose),@"buttonName":text,@"source":@"1",@"pageName":pageName}}];
+					[[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"NudgeClick",@"body":@{@"nudgesId":@(_baseModel.nudgesId),@"nudgesName":nudgesName,@"contactId":contactId,@"campaignCode":@(_baseModel.campaignId),@"batchId":@"0",@"jumpUrl":url,@"invokeAction":invokeAction,@"isClose":@(isClose),@"buttonName":text,@"source":@"1",@"url":url,@"schemeType":schemeType,@"nudgesType":@(_baseModel.nudgesType),@"pageName":pageName}}];
 					
 					
 			  }
