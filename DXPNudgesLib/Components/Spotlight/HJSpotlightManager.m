@@ -141,7 +141,7 @@ static HJSpotlightManager *manager = nil;
 		[self stopCurrentPlayingView];
 		// 寻找下一个nudges
 		
-		[[HJNudgesManager sharedInstance] showNextNudges];
+//		[[HJNudgesManager sharedInstance] showNextNudges];
 	}
 }
 
