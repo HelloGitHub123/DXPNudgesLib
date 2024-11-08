@@ -101,7 +101,7 @@ static HJNudgesManager *manager = nil;
   self.isReq = false;
   self.isLock = NO;
   self.nIndex = 0;
-  self.isReported = NO; // 默认不上报
+  self.isReported = YES; // 默认上报
 	self.visiblePopTipViews = [[NSMutableArray alloc] init];
 }
 
@@ -295,16 +295,21 @@ static HJNudgesManager *manager = nil;
   }];
 }
 
-- (void)setCurrentPageName:(NSString *)currentPageName {
+- (void)setPageName:(NSString *)currentPageName {
   _currentPageName = currentPageName;
 }
 
 // 页面查询nudges
 - (void)launchNudges {
-  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.8*NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
     [self queryNudgesWithPageName:self.currentPageName];
-  });
 }
+
+- (void)setCurrentPageName:(NSString *)currentPageName {
+  _currentPageName = currentPageName;
+  // 查询nudges
+  [self queryNudgesWithPageName:self.currentPageName];
+}
+
 
 // 判断全局频次条件(用于所有Nudges组件)
 - (BOOL)checkGlobalFrequency {
@@ -430,7 +435,9 @@ static HJNudgesManager *manager = nil;
   };
   [[NdHJHttpSessionManager sharedInstance] sendRequest:request complete:^(NdHJHttpReponse * _Nonnull response) {
     if (!response.serverError) {
+		NSLog(@"DXPNudges Log:=== The nudges/contact/resp interface request success !!!");
     } else {
+		NSLog(@"DXPNudges Log:=== The nudges/contact/resp interface request failed !!!");
     }
   }];
 }
@@ -1138,7 +1145,9 @@ static HJNudgesManager *manager = nil;
   };
   [[NdHJHttpSessionManager sharedInstance] sendRequest:request complete:^(NdHJHttpReponse * _Nonnull response) {
     if (!response.serverError) {
+		NSLog(@"DXPNudges Log:=== The nudges/contact/feedback interface request success !!!");
     } else {
+		NSLog(@"DXPNudges Log:=== The nudges/contact/feedback interface request failed !!!");
     }
   }];
 }

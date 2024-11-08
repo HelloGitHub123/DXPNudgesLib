@@ -350,7 +350,7 @@ static HJPomoTagManager *manager = nil;
 //	[[SensorsManagement sharedInstance]trackWithName:@"NudgesShow" withProperties:dic];
 	
 	// 显示后上报接口
-//	[[HJNudgesManager sharedInstance] nudgesContactRespByNudgesId:baseModel.nudgesId contactId:baseModel.contactId];
+	[[HJNudgesManager sharedInstance] nudgesContactRespByNudgesId:baseModel.nudgesId contactId:baseModel.contactId];
   
   
 	// 显示回调

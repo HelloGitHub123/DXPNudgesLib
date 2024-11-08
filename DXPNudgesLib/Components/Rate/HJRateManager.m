@@ -136,22 +136,27 @@ static HJRateManager *manager = nil;
 			NSString *comments = isEmptyString_Nd(self.textView.contentText)?@"":self.textView.contentText;
 			
 			NSString *schemeType = [NSString stringWithFormat:@"%ld",(long)item.action.urlJumpType];
-		
+
+      
+      // 反馈时长
+      NSString *feedBackTime = [NSString getCurrentTimestamp];
+      NSInteger feedbackDuration = [feedBackTime integerValue] - [showTimestamp integerValue];
+      NSString *duration = [NSString stringWithFormat:@"%ld",(long)feedbackDuration];
 			
 			if (_delegate && [_delegate conformsToProtocol:@protocol(RateEventDelegate)]) {
 				if (_delegate && [_delegate respondsToSelector:@selector(RateClickEventByActionModel:isClose:buttonName:score:thumbResult:comments:nudgeModel:feedbackDuration:)]) {
-					
-					// 反馈时长
-					NSString *feedBackTime = [NSString getCurrentTimestamp];
-					NSInteger feedbackDuration = [feedBackTime integerValue] - [showTimestamp integerValue];
-					
+          
 					[_delegate RateClickEventByActionModel:item.action isClose:isClose buttonName:text score:[NSString stringWithFormat:@"%ld",(long)selectedIndex] thumbResult:thumbsScoreStr comments:comments nudgeModel:_baseModel feedbackDuration:feedbackDuration];
 				}
 			}
 			
 			// 埋点发送通知给RN
 			[[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"NudgeClick",@"body":@{@"nudgesId":@(_baseModel.nudgesId),@"nudgesName":nudgesName,@"contactId":contactId,@"campaignCode":@(_baseModel.campaignId),@"batchId":@"0",@"jumpUrl":url,@"invokeAction":invokeAction,@"isClose":@(isClose),@"buttonName":text,@"source":@"1",@"score":@(selectedIndex),@"thumbResult":thumbsScoreStr,@"comments":comments,@"url":url,@"schemeType":schemeType,@"nudgesType":@(_baseModel.nudgesType),@"pageName":pageName}}];
+
 			
+      // 反馈
+      [[HJNudgesManager sharedInstance] nudgesFeedBackWithNudgesId:_baseModel.nudgesId contactId:contactId score:[NSString stringWithFormat:@"%ld",(long)selectedIndex] thumbResult:thumbsScoreStr options:@"" comments:comments feedbackDuration:duration];
+      
 		}
 	}
 }
@@ -276,7 +281,7 @@ static HJRateManager *manager = nil;
         [NdHJNudgesDBManager updateNudgesIsShowWithNudgesId:_baseModel.nudgesId model:_nudgesModel];
     }
     // 显示后上报接口
-//	[[HJNudgesManager sharedInstance] nudgesContactRespByNudgesId:_baseModel.nudgesId contactId:_baseModel.contactId];
+	[[HJNudgesManager sharedInstance] nudgesContactRespByNudgesId:_baseModel.nudgesId contactId:_baseModel.contactId];
   
   NSString *contactId = isEmptyString_Nd(_baseModel.contactId)?@"":_baseModel.contactId;
   NSString *nudgesName = isEmptyString_Nd(_baseModel.nudgesName)?@"":_baseModel.nudgesName;

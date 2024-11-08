@@ -70,6 +70,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (instancetype)sharedInstance;
 
+- (void)setPageName:(NSString *)currentPageName;
+
 // 匹配设备，在app未启动 或者 没有进程的情况下调用
 // urlScheme:
 - (void)pairDeviceWebSocketConnectWithLaunchOptions:(NSDictionary *)launchOptions;

@@ -1194,7 +1194,7 @@ static HJToolTipsManager *manager = nil;
 	
 	
 	// 显示后上报接口
-//	[[HJNudgesManager sharedInstance] nudgesContactRespByNudgesId:baseModel.nudgesId contactId:baseModel.contactId];
+	[[HJNudgesManager sharedInstance] nudgesContactRespByNudgesId:baseModel.nudgesId contactId:baseModel.contactId];
 	
 	[[HJNudgesManager sharedInstance].visiblePopTipViews addObject:popTipView];
 	

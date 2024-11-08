@@ -105,34 +105,53 @@ static HJFeedBackManager *manager = nil;
 			NSString *textValue = isEmptyString_Nd(self.textView.contentText)?@"":self.textView.contentText;
 			
 			NSString *schemeType = [NSString stringWithFormat:@"%ld",(long)item.action.urlJumpType];
-			
+
+          
+          // 构造数据
+          NSMutableArray *optionList = [[NSMutableArray alloc] init];
+          NSInteger count = _baseModel.ownPropModel.textProperties.options.count;
+          for (int i = 0; i<count; i++) {
+            NSMutableDictionary *dic = [[NSMutableDictionary alloc] init];
+            NSString *value = [NSString stringWithFormat:@"%d",i+1];
+            if ([self.selectedOptionList containsObject:value]) {
+              [dic setValue:@"1" forKey:[NSString stringWithFormat:@"option%@",value]];
+            } else {
+              [dic setValue:@"0" forKey:[NSString stringWithFormat:@"option%@",value]];
+            }
+            [optionList addObject:dic];
+          }
+          // 反馈时长
+          NSString *feedBackTime = [NSString getCurrentTimestamp];
+          NSInteger feedbackDuration = [feedBackTime integerValue] - [showTimestamp integerValue];
+          NSString *duration = [NSString stringWithFormat:@"%ld",(long)feedbackDuration];
+          
 			
 			if (_delegate && [_delegate conformsToProtocol:@protocol(FeedBackEventDelegate)]) {
 				if (_delegate && [_delegate respondsToSelector:@selector(FeedBackClickEventByActionModel:isClose:buttonName:optionList:FeedBackText:nudgeModel:comments:feedbackDuration:)]) {
-					// 构造数据
-					NSMutableArray *optionList = [[NSMutableArray alloc] init];
-					NSInteger count = _baseModel.ownPropModel.textProperties.options.count;
-					for (int i = 0; i<count; i++) {
-						NSMutableDictionary *dic = [[NSMutableDictionary alloc] init];
-						NSString *value = [NSString stringWithFormat:@"%d",i+1];
-						if ([self.selectedOptionList containsObject:value]) {
-							[dic setValue:@"1" forKey:[NSString stringWithFormat:@"option%@",value]];
-						} else {
-							[dic setValue:@"0" forKey:[NSString stringWithFormat:@"option%@",value]];
-						}
-						[optionList addObject:dic];
-					}
-					// 反馈时长
-					NSString *feedBackTime = [NSString getCurrentTimestamp];
-					NSInteger feedbackDuration = [feedBackTime integerValue] - [showTimestamp integerValue];
-					
 					[_delegate FeedBackClickEventByActionModel:item.action isClose:isClose buttonName:text optionList:optionList FeedBackText:textValue nudgeModel:_baseModel comments:textValue feedbackDuration:feedbackDuration];
 				}
 			}
 			
 			// 埋点发送通知给RN
 			[[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"NudgeClick",@"body":@{@"nudgesId":@(_baseModel.nudgesId),@"nudgesName":nudgesName,@"contactId":contactId,@"campaignCode":@(_baseModel.campaignId),@"batchId":@"0",@"jumpUrl":url,@"invokeAction":invokeAction,@"isClose":@(isClose),@"buttonName":text,@"source":@"1",@"pageName":pageName,@"textValue":textValue,@"url":url,@"schemeType":schemeType,@"nudgesType":@(_baseModel.nudgesType),@"selectedOptionList":self.selectedOptionList}}];
+
 			
+          // 调用feed back 接口
+          __block NSString *options = @"";
+          [optionList enumerateObjectsUsingBlock:^(NSMutableDictionary *obj, NSUInteger idx, BOOL * _Nonnull stop) {
+            if ([[obj.allValues objectAtIndex:0] intValue]) {
+              if (isEmptyString_Nd(options)) {
+                NSString *key = [NSString stringWithFormat:@"%@",[obj.allKeys objectAtIndex:0]];
+                options = [options stringByAppendingString:key];
+              } else {
+                NSString *key = [NSString stringWithFormat:@",%@",[obj.allKeys objectAtIndex:0]];
+                options = [options stringByAppendingString:key];
+              }
+            }
+          }];
+          
+          [[HJNudgesManager sharedInstance] nudgesFeedBackWithNudgesId:_baseModel.nudgesId contactId:contactId score:@"" thumbResult:@"" options:options comments:textValue feedbackDuration:duration];
+          
         }
     }
 }
@@ -268,7 +287,7 @@ static HJFeedBackManager *manager = nil;
 	[[HJNudgesManager sharedInstance].visiblePopTipViews addObject:self.customView];
     
     // 显示后上报接口
-//    [[HJNudgesManager sharedInstance] nudgesContactRespByNudgesId:_baseModel.nudgesId contactId:_baseModel.contactId];
+    [[HJNudgesManager sharedInstance] nudgesContactRespByNudgesId:_baseModel.nudgesId contactId:_baseModel.contactId];
   
   NSString *contactId = isEmptyString_Nd(_baseModel.contactId)?@"":_baseModel.contactId;
   NSString *nudgesName = isEmptyString_Nd(_baseModel.nudgesName)?@"":_baseModel.nudgesName;

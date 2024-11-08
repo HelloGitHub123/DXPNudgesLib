@@ -99,21 +99,27 @@ static HJNPSManager *manager = nil;
 			NSString *invokeAction = isEmptyString_Nd(item.action.invokeAction)?@"":item.action.invokeAction;
 			NSString *comments = isEmptyString_Nd(self.textView.contentText)?@"":self.textView.contentText;
 			NSString *schemeType = [NSString stringWithFormat:@"%ld",(long)item.action.urlJumpType];
-			
+
+          // 反馈时长
+          NSString *feedBackTime = [NSString getCurrentTimestamp];
+          NSInteger feedbackDuration = [feedBackTime integerValue] - [showTimestamp integerValue];
+          NSString *duration = [NSString stringWithFormat:@"%ld",(long)feedbackDuration];
 			
 			if (_delegate && [_delegate conformsToProtocol:@protocol(NPSEventDelegate)]) {
 				if (_delegate && [_delegate respondsToSelector:@selector(NPSClickEventByActionModel:isClose:buttonName:nudgeModel:score:optionList:thumbResult:comments:feedbackDuration:)]) {
-					
-					// 反馈时长
-					NSString *feedBackTime = [NSString getCurrentTimestamp];
-					NSInteger feedbackDuration = [feedBackTime integerValue] - [showTimestamp integerValue];
-					
+        
 					[_delegate NPSClickEventByActionModel:item.action isClose:isClose buttonName:text nudgeModel:_baseModel score:self.resultNumber optionList:@[].mutableCopy thumbResult:@"" comments:comments feedbackDuration:feedbackDuration];
 				}
 			}
 			
 			// 埋点发送通知给RN
 			[[NSNotificationCenter defaultCenter] postNotificationName:@"start_event_notification" object:nil userInfo:@{@"eventName":@"NudgeClick",@"body":@{@"nudgesId":@(_baseModel.nudgesId),@"nudgesName":nudgesName,@"contactId":contactId,@"campaignCode":@(_baseModel.campaignId),@"batchId":@"0",@"jumpUrl":url,@"invokeAction":invokeAction,@"isClose":@(isClose),@"buttonName":text,@"source":@"1",@"pageName":pageName,@"url":url,@"schemeType":schemeType,@"nudgesType":@(_baseModel.nudgesType),@"score":self.resultNumber,@"comments":comments,@"optionList":@[].mutableCopy,@"thumbResult":@""}}];
+
+          
+          
+          // 反馈
+          [[HJNudgesManager sharedInstance] nudgesFeedBackWithNudgesId:_baseModel.nudgesId contactId:contactId score:self.resultNumber thumbResult:@"" options:@"" comments:comments feedbackDuration:duration];
+          
         }
     }
 }
@@ -211,7 +217,7 @@ static HJNPSManager *manager = nil;
     }
     
     // 显示后上报接口
-//    [[HJNudgesManager sharedInstance] nudgesContactRespByNudgesId:_baseModel.nudgesId contactId:_baseModel.contactId];
+    [[HJNudgesManager sharedInstance] nudgesContactRespByNudgesId:_baseModel.nudgesId contactId:_baseModel.contactId];
   
   NSString *contactId = isEmptyString_Nd(_baseModel.contactId)?@"":_baseModel.contactId;
   NSString *nudgesName = isEmptyString_Nd(_baseModel.nudgesName)?@"":_baseModel.nudgesName;
