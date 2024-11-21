@@ -36,6 +36,14 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) UIImage *screenShotImg;
 
 @property (nonatomic, strong) NSMutableArray *visiblePopTipViews;
+
+//@property (nonatomic, assign) BOOL isCheckNextNudge; // 是否展示下一个nudges
+
+// 设置当前页面所有nudges为不展示。
+- (void)updateCurrentPageNudgesClose;
+
+// 删除数据 如果不想每次启动都展示一遍所有nudges，可以屏蔽这个删除表数据操作
+- (void)clearDBAndCacheData;
 /**
  * 按钮点击事件
  *  eventName: 事件名称

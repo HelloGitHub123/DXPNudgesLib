@@ -93,6 +93,7 @@ static HJNudgesManager *manager = nil;
 
 // 数据初始化
 - (void)initData {
+//	self.isCheckNextNudge = YES;
   self.sessionFlag = YES;
   self.domTreeDic = @{};
   self.configParametersModel = [[NudgesConfigParametersModel alloc] init];
@@ -296,6 +297,7 @@ static HJNudgesManager *manager = nil;
 }
 
 - (void)setPageName:(NSString *)currentPageName {
+//	self.isCheckNextNudge = YES;
   _currentPageName = currentPageName;
 }
 
@@ -305,6 +307,7 @@ static HJNudgesManager *manager = nil;
 }
 
 - (void)setCurrentPageName:(NSString *)currentPageName {
+//	self.isCheckNextNudge = YES;
   _currentPageName = currentPageName;
   // 查询nudges
   [self queryNudgesWithPageName:self.currentPageName];
@@ -905,6 +908,9 @@ static HJNudgesManager *manager = nil;
 
 #pragma mark -- 展示下一个Nudges view
 - (void)showNextNudges {
+//	if (!self.isCheckNextNudge) {
+//		return;
+//	}
   NSMutableArray *nudgesList = [NdHJNudgesDBManager selectNudgesDBWithPageName:self.currentPageName];
   if (IsArrEmpty_Nd(nudgesList)) {
     self.isLock = NO;
@@ -918,6 +924,14 @@ static HJNudgesManager *manager = nil;
     NSString *className = NSStringFromClass([VC class]);
     [self queryNudgesWithPageName:className];
   }
+}
+
+// 设置当前页面所有nudges为不展示。
+- (void)updateCurrentPageNudgesClose {
+	NSMutableArray *nudgesList = [NdHJNudgesDBManager selectNudgesDBWithPageName:self.currentPageName];
+	[nudgesList enumerateObjectsUsingBlock:^(NudgesModel  *obj, NSUInteger idx, BOOL * _Nonnull stop) {
+		[NdHJNudgesDBManager updateNudgesIsShowWithNudgesId:obj.nudgesId model:obj];
+	}];
 }
 
 #pragma mark -- ToolTipsEventDelegate

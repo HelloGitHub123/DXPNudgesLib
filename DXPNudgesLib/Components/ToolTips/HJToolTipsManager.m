@@ -24,7 +24,7 @@
 #import "TKUtils.h"
 #import <DXPFontManagerLib/FontManager.h>
 
-#define Padding_Spacing 10
+#define Padding_Spacing 16
 #define View_Spacing  10 // view 之间的间距
 #define Bottom_Spacing 15
 #define Button_height 30
@@ -136,6 +136,7 @@ static HJToolTipsManager *manager = nil;
 
 // dissMiss 按钮点击事件
 - (void)dissMissButtonClick:(id)sender {
+	[[HJNudgesManager sharedInstance] updateCurrentPageNudgesClose];// 关闭当前页面所有Nudges 不展示
 	[self MonolayerViewClickEventByTarget:self];
 }
 
@@ -259,14 +260,14 @@ static HJToolTipsManager *manager = nil;
 			iconSize = baseModel.dismissButtonModel.iconStyle.iconSize;
 		}
 		[dissButton mas_makeConstraints:^(MASConstraintMaker *make) {
-			make.top.equalTo(customView.mas_top).offset(4);
-			make.trailing.equalTo(customView.mas_trailing).offset(-14);
-			make.height.equalTo(@(iconSize+10));
+			make.top.equalTo(customView.mas_top).offset(10);
+			make.trailing.equalTo(customView.mas_trailing).offset(-Padding_Spacing);
+			make.height.equalTo(@(iconSize));
 			make.width.equalTo(@(iconSize+10));
 		}];
 		dissButton.layer.cornerRadius = (iconSize+10)/2;
 		[dissButton setTitle:@"X" forState:UIControlStateNormal];
-		dissButton.titleEdgeInsets = UIEdgeInsetsMake(5, 5, 5, 5);
+		dissButton.titleEdgeInsets = UIEdgeInsetsMake(0, 5, 0, 5);
 		dissButton.titleLabel.font = [FontManager setNormalFontSize:iconSize];
 		// 标题颜色
 		UIColor *color = [UIColor whiteColor];
@@ -283,7 +284,7 @@ static HJToolTipsManager *manager = nil;
 		} else {
 			[dissButton setBackgroundColor:[UIColor clearColor]] ;
 		}
-		h_dissButton = iconSize + 14;
+		h_dissButton = iconSize;
 	} else {
 		[dissButton mas_makeConstraints:^(MASConstraintMaker *make) {
 			make.top.equalTo(customView.mas_top).offset(0);
@@ -554,12 +555,34 @@ static HJToolTipsManager *manager = nil;
 			// 计算标题高度
 			[titleLab sizeToFit];
 			CGSize labelsize =[titleLab sizeThatFits:CGSizeMake(nWidth, CGFLOAT_MAX)];
-			[titleLab mas_makeConstraints:^(MASConstraintMaker *make) {
-				make.leading.equalTo(customView.mas_leading).offset(Padding_Spacing);
-				make.trailing.equalTo(customView.mas_trailing).offset(-Padding_Spacing);
-				make.top.equalTo(dissButton.mas_bottom).offset(Padding_Spacing);
-				make.height.equalTo(@(labelsize.height));
-			}];
+			// 判断关闭按钮
+			if ([baseModel.dismiss containsString:@"A"]) {
+				NSInteger iconSize = 16;
+				if (baseModel.dismissButtonModel.iconStyle.iconSize > 0) {
+					iconSize = baseModel.dismissButtonModel.iconStyle.iconSize;
+				}
+				
+				[titleLab mas_makeConstraints:^(MASConstraintMaker *make) {
+					make.leading.equalTo(customView.mas_leading).offset(Padding_Spacing);
+					make.trailing.equalTo(dissButton.mas_leading).offset(-(Padding_Spacing + iconSize+10));
+					make.top.equalTo(dissButton.mas_top).offset(0);
+					make.height.equalTo(@(labelsize.height));
+				}];
+				
+				h_dissButton = 0;
+				
+			} else {
+				[titleLab mas_makeConstraints:^(MASConstraintMaker *make) {
+					make.leading.equalTo(customView.mas_leading).offset(Padding_Spacing);
+					make.trailing.equalTo(customView.mas_trailing).offset(-Padding_Spacing);
+					make.top.equalTo(dissButton.mas_bottom).offset(View_Spacing);
+					make.height.equalTo(@(labelsize.height));
+				}];
+			}
+			
+			
+			 
+			
 			iViewCount = iViewCount + 1;
 			
 		} else {
@@ -722,7 +745,7 @@ static HJToolTipsManager *manager = nil;
 				[bodyLab mas_makeConstraints:^(MASConstraintMaker *make) {
 					make.leading.equalTo(customView.mas_leading).offset(Padding_Spacing);
 					make.trailing.equalTo(customView.mas_trailing).offset(-Padding_Spacing);
-					make.top.equalTo(imgView.mas_bottom).offset(Padding_Spacing);
+					make.top.equalTo(imgView.mas_bottom).offset(View_Spacing);
 					make.height.equalTo(@(labelsize.height));
 				}];
 			} else {
@@ -1057,7 +1080,14 @@ static HJToolTipsManager *manager = nil;
 		
 	} else {
 		// 图片在文本上下
-		customView.frame = CGRectMake(0, 0, nWidth+Padding_Spacing*2,  h_dissButton + height_Video + titleLab.size.height + h_body + height_image + [baseModel.buttonsModel.buttonList count] * Button_height + iViewCount * View_Spacing + 10);
+		if (h_dissButton > 0 && titleLab.size.height == 0) {
+			customView.frame = CGRectMake(0, 0, nWidth+Padding_Spacing*2,  10 + h_dissButton + height_Video + titleLab.size.height + h_body + height_image + [baseModel.buttonsModel.buttonList count] * Button_height + iViewCount * View_Spacing + 10);
+		} else {
+			customView.frame = CGRectMake(0, 0, nWidth+Padding_Spacing*2,  12 + h_dissButton + height_Video + titleLab.size.height + h_body + height_image + [baseModel.buttonsModel.buttonList count] * Button_height + (iViewCount-1) * View_Spacing + 12);
+		}
+		
+		
+//		customView.frame = CGRectMake(0, 0, nWidth+Padding_Spacing*2,  10 + h_dissButton + height_Video + titleLab.size.height + h_body + height_image + [baseModel.buttonsModel.buttonList count] * Button_height + (iViewCount-1) * View_Spacing + 10);
 	}
 	
 #pragma mark -- 构造nudges view
@@ -1079,7 +1109,7 @@ static HJToolTipsManager *manager = nil;
 		popTipView.preferredPointDirection = PointDirectionAny;
 	}
 	// margin
-	if (baseModel.positionModel.position == KPosition_Above || baseModel.positionModel.position == KPosition_Auto) {
+	if (baseModel.positionModel.position == KPosition_Above || baseModel.positionModel.position == KPosition_Auto || baseModel.positionModel.position == KPosition_Under) {
 		if (baseModel.positionModel.margin > 0) {
 			popTipView.topMargin = baseModel.positionModel.margin;
 		} else {
