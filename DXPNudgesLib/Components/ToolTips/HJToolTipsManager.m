@@ -23,6 +23,7 @@
 #import "ZFCustomControlView.h"
 #import "TKUtils.h"
 #import <DXPFontManagerLib/FontManager.h>
+#import "UIImage+SVGManager.h"
 
 #define Padding_Spacing 16
 #define View_Spacing  10 // view 之间的间距
@@ -135,8 +136,14 @@ static HJToolTipsManager *manager = nil;
 }
 
 // dissMiss 按钮点击事件
-- (void)dissMissButtonClick:(id)sender {
-	[[HJNudgesManager sharedInstance] updateCurrentPageNudgesClose];// 关闭当前页面所有Nudges 不展示
+//- (void)dissMissButtonClick:(id)sender {
+//	[[HJNudgesManager sharedInstance] updateCurrentPageNudgesClose];// 关闭当前页面所有Nudges 不展示
+//	[self MonolayerViewClickEventByTarget:self];
+//}
+
+// dissMiss 按钮点击事件
+- (void)dissMissButtonClick:(UIGestureRecognizer *)tap {
+	[[HJNudgesManager sharedInstance] updateCurrentPageNudgesClose];
 	[self MonolayerViewClickEventByTarget:self];
 }
 
@@ -249,40 +256,47 @@ static HJToolTipsManager *manager = nil;
 		nWidth = baseModel.positionModel.width;
 	}
 	
-	UIButton *dissButton = [UIButton buttonWithType:UIButtonTypeSystem];
-	[customView addSubview:dissButton];
+	UIView *dissBackView = [[UIView alloc] init];
+	[customView addSubview:dissBackView];
+	UIImageView *dissButton = [[UIImageView alloc] init];
+	[dissBackView addSubview:dissButton];
+	
 	if ([baseModel.dismiss containsString:@"A"]) {
 		// 关闭按钮
-		[dissButton addTarget:self action:@selector(dissMissButtonClick:) forControlEvents:UIControlEventTouchUpInside];
+		[dissButton setUserInteractionEnabled:YES];
 		// 图标大小
 		NSInteger iconSize = 16;
 		if (baseModel.dismissButtonModel.iconStyle.iconSize > 0) {
 			iconSize = baseModel.dismissButtonModel.iconStyle.iconSize;
 		}
-		[dissButton mas_makeConstraints:^(MASConstraintMaker *make) {
-			make.top.equalTo(customView.mas_top).offset(10);
-			make.trailing.equalTo(customView.mas_trailing).offset(-Padding_Spacing);
-			make.height.equalTo(@(iconSize));
-			make.width.equalTo(@(iconSize+10));
+		
+		[dissBackView mas_makeConstraints:^(MASConstraintMaker *make) {
+			make.top.equalTo(customView.mas_top).offset(12);
+			make.trailing.equalTo(customView.mas_trailing).offset(-Padding_Spacing+2);
+			make.height.equalTo(@(iconSize+6));
+			make.width.equalTo(@(iconSize+6));
 		}];
-		dissButton.layer.cornerRadius = (iconSize+10)/2;
-		[dissButton setTitle:@"X" forState:UIControlStateNormal];
-		dissButton.titleEdgeInsets = UIEdgeInsetsMake(0, 5, 0, 5);
-		dissButton.titleLabel.font = [FontManager setNormalFontSize:iconSize];
-		// 标题颜色
-		UIColor *color = [UIColor whiteColor];
-		if (!isEmptyString_Nd([UIColor colorWithHexString:baseModel.dismissButtonModel.iconStyle.iconColor])) {
-			color = [UIColor colorWithHexString:baseModel.dismissButtonModel.iconStyle.iconColor];
-		}
-		[dissButton setTitleColor:color forState:UIControlStateNormal];
+		dissBackView.layer.cornerRadius = (iconSize+6)/2;
+		
+		[dissButton mas_makeConstraints:^(MASConstraintMaker *make) {
+			make.height.equalTo(@(iconSize));
+			make.width.equalTo(@(iconSize));
+			make.centerX.mas_equalTo(0);
+			make.centerY.mas_equalTo(0);
+		}];
+		[dissButton setImage:[UIImage svgImageNamed:@"Vector" size:CGSizeMake(iconSize, iconSize) tintColor:isEmptyString_Nd(baseModel.dismissButtonModel.iconStyle.iconColor)?@"#FFFFFF":baseModel.dismissButtonModel.iconStyle.iconColor]];
+		UITapGestureRecognizer *tapGesture1 = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(dissMissButtonClick:)];
+		tapGesture1.numberOfTapsRequired = 1;
+		[dissButton addGestureRecognizer:tapGesture1];
+		
 		if (baseModel.dismissButtonModel.type == KDismissButtonType_FilledButton) {
 			UIColor *color = [UIColor whiteColor];
 			if (!isEmptyString_Nd(baseModel.dismissButtonModel.filledColor)) {
 				color = [UIColor colorWithHexString:baseModel.dismissButtonModel.filledColor];
 			}
-			[dissButton setBackgroundColor:color];
+			[dissBackView setBackgroundColor:color];
 		} else {
-			[dissButton setBackgroundColor:[UIColor clearColor]] ;
+			[dissBackView setBackgroundColor:[UIColor clearColor]] ;
 		}
 		h_dissButton = iconSize;
 	} else {
@@ -564,8 +578,8 @@ static HJToolTipsManager *manager = nil;
 				
 				[titleLab mas_makeConstraints:^(MASConstraintMaker *make) {
 					make.leading.equalTo(customView.mas_leading).offset(Padding_Spacing);
-					make.trailing.equalTo(dissButton.mas_leading).offset(-(Padding_Spacing + iconSize+10));
-					make.top.equalTo(dissButton.mas_top).offset(0);
+					make.trailing.equalTo(dissButton.mas_leading).offset(-8);
+					make.centerY.equalTo(dissButton.mas_centerY).offset(0);
 					make.height.equalTo(@(labelsize.height));
 				}];
 				
