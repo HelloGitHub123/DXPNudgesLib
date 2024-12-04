@@ -289,7 +289,7 @@ static HJToolTipsManager *manager = nil;
 		dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
 			UIImage *svgImage = [UIImage svgImageNamed:@"Vector" size:CGSizeMake(iconSize, iconSize) tintColor:isEmptyString_Nd(baseModel.dismissButtonModel.iconStyle.iconColor) ? @"#FFFFFF" : baseModel.dismissButtonModel.iconStyle.iconColor];
 			dispatch_async(dispatch_get_main_queue(), ^{
-				[dissButton setImage:svgImage forState:UIControlStateNormal];
+				dissButton.image = svgImage;
 			});
 		});
 		
