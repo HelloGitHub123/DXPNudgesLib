@@ -51,6 +51,8 @@ static HJNudgesManager *manager = nil;
 
 /// 频次model
 @property (nonatomic, strong) FrequencyModel *frequencyModel;
+
+@property (nonatomic, strong) NSArray *contactList;
 @end
 
 @implementation HJNudgesManager
@@ -72,6 +74,8 @@ static HJNudgesManager *manager = nil;
     [self firstLaunchApp];
     
     [NdIMDBManager initDBSettings];
+	  
+	  NSLog(@"DXPNudges Log:===  Nudges SDK: 1.0.27");
   }
   return self;
 }
@@ -246,6 +250,7 @@ static HJNudgesManager *manager = nil;
         }
         
         NSArray *contactList = [resDic objectForKey:@"contactList"];
+		  self.contactList = contactList;
         // 判断是否满足条件
         if (IsArrEmpty_Nd(contactList) || ![self checkGlobalFrequency]) {
           NSLog(@"DXPNudges Log:=== contactList data is empty!!!");
@@ -577,7 +582,7 @@ static HJNudgesManager *manager = nil;
 
 #pragma mark -- 查询对应页面上的nudges，并展示 (RunTime 会实时调用该方法)
 - (void)queryNudgesWithPageName:(NSString *)pageName {
-  if (isEmptyString_Nd(self.currentPageName) || self.visiblePopTipViews.count > 0) {
+  if (isEmptyString_Nd(self.currentPageName) || self.visiblePopTipViews.count > 0 || IsArrEmpty_Nd(self.contactList)) {
     return;
   }
   self.isLock = NO;
