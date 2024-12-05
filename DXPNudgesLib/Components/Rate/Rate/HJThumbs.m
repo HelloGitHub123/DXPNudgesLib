@@ -51,7 +51,6 @@
 	
 	
 	// 获取资源包的路径
-	SVGKImage *svgImage;
 	NSBundle *bundle = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"DXPNudgesLib" ofType:@"bundle"]];
 	// 加载 SVG 文件
 	NSString *svgFilePath = [bundle pathForResource:@"thumbs-up" ofType:@"svg"];
@@ -88,7 +87,6 @@
 //    [self.thumbsDownImgview setImage:[UIImage svgImageNamed:@"thumbs-down" size:CGSizeMake(self.iconSize, self.iconSize) tintColor:isEmptyString_Nd(self.beforeSvgColor)?@"#333333":self.beforeSvgColor]];
 	
 	// 获取资源包的路径
-	SVGKImage *svgImage;
 	NSBundle *bundle = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"DXPNudgesLib" ofType:@"bundle"]];
 	// 加载 SVG 文件
 	NSString *svgFilePath = [bundle pathForResource:@"thumbs-down" ofType:@"svg"];
@@ -128,7 +126,6 @@
 		
 		
 		// 获取资源包的路径
-		SVGKImage *svgImage;
 		NSBundle *bundle = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"DXPNudgesLib" ofType:@"bundle"]];
 		// 加载 SVG 文件
 		NSString *svgFilePath = [bundle pathForResource:@"thumbs-up" ofType:@"svg"];
@@ -153,7 +150,6 @@
 		}
 		
 		// 获取资源包的路径
-		SVGKImage *svgImage;
 		NSBundle *bundle = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"DXPNudgesLib" ofType:@"bundle"]];
 		// 加载 SVG 文件
 		NSString *svgFilePath = [bundle pathForResource:@"thumbs-down" ofType:@"svg"];
@@ -184,7 +180,6 @@
 //        [self.thumbsUpImgview setImage:[UIImage svgImageNamed:@"thumbs-up" size:CGSizeMake(self.iconSize, self.iconSize) tintColor:isEmptyString_Nd(self.beforeSvgColor)?@"#e24a34":self.beforeSvgColor]];
 		
 		// 获取资源包的路径
-		SVGKImage *svgImage;
 		NSBundle *bundle = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"DXPNudgesLib" ofType:@"bundle"]];
 		// 加载 SVG 文件
 		NSString *svgFilePath = [bundle pathForResource:@"thumbs-up" ofType:@"svg"];
@@ -212,7 +207,6 @@
 //        [self.thumbsDownImgview setImage:[UIImage svgImageNamed:@"thumbs-down" size:CGSizeMake(self.iconSize, self.iconSize) tintColor:isEmptyString_Nd(self.thumbsDownColor)?@"#e24a34":self.thumbsDownColor]];
 		
 		// 获取资源包的路径
-		SVGKImage *svgImage;
 		NSBundle *bundle = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"DXPNudgesLib" ofType:@"bundle"]];
 		// 加载 SVG 文件
 		NSString *svgFilePath = [bundle pathForResource:@"thumbs-down" ofType:@"svg"];

@@ -112,7 +112,6 @@
 //        [imgView setImage:[UIImage svgImageNamed:svgName size:CGSizeMake(self.iconSize, self.iconSize) tintColor:isEmptyString_Nd(self.beforeSvgColor)?@"#333333":self.beforeSvgColor]];
 		
 		// 获取资源包的路径
-		SVGKImage *svgImage;
 		NSBundle *bundle = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"DXPNudgesLib" ofType:@"bundle"]];
 		// 加载 SVG 文件
 		NSString *svgFilePath = [bundle pathForResource:svgName ofType:@"svg"];
@@ -159,7 +158,6 @@
 //                [imgView setImage:[UIImage svgImageNamed:svgName size:CGSizeMake(self.iconSize, self.iconSize) tintColor:isEmptyString_Nd(self.afterSvgColor)?@"#e24a34":self.afterSvgColor]];
 				
 				// 获取资源包的路径
-				SVGKImage *svgImage;
 				NSBundle *bundle = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"DXPNudgesLib" ofType:@"bundle"]];
 				// 加载 SVG 文件
 				NSString *svgFilePath = [bundle pathForResource:svgName ofType:@"svg"];
@@ -187,7 +185,6 @@
 //                [imgView setImage:[UIImage svgImageNamed:svgName size:CGSizeMake(self.iconSize, self.iconSize) tintColor:isEmptyString_Nd(self.beforeSvgColor)?@"#333333":self.beforeSvgColor]];
 				
 				// 获取资源包的路径
-				SVGKImage *svgImage;
 				NSBundle *bundle = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"DXPNudgesLib" ofType:@"bundle"]];
 				// 加载 SVG 文件
 				NSString *svgFilePath = [bundle pathForResource:svgName ofType:@"svg"];

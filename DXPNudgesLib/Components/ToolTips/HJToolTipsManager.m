@@ -288,7 +288,6 @@ static HJToolTipsManager *manager = nil;
 //		[dissButton setImage:[UIImage svgImageNamed:@"Vector" size:CGSizeMake(iconSize, iconSize) tintColor:isEmptyString_Nd(baseModel.dismissButtonModel.iconStyle.iconColor)?@"#FFFFFF":baseModel.dismissButtonModel.iconStyle.iconColor]];
 		
 		// 获取资源包的路径
-		SVGKImage *svgImage;
 		NSBundle *bundle = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"DXPNudgesLib" ofType:@"bundle"]];
 		// 加载 SVG 文件
 		NSString *svgFilePath = [bundle pathForResource:@"Vector" ofType:@"svg"];
