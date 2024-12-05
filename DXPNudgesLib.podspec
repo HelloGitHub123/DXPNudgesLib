@@ -16,7 +16,7 @@ Pod::Spec.new do |spec|
   #
 
   spec.name         = "DXPNudgesLib"
-  spec.version      = "1.0.29"
+  spec.version      = "1.0.30"
   spec.summary      = "DXP DXPNudgesLib."
 
   # This description is used to generate tags and improve search results.

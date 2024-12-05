@@ -8,6 +8,7 @@
 #import "HJThumbs.h"
 #import "UIImage+SVGManager.h"
 #import "Nudges.h"
+#import <SVGKit/SVGKImage.h>
 
 @interface HJThumbs ()
 
@@ -46,7 +47,36 @@
     [self.thumbsUpImgview setUserInteractionEnabled:YES];
     self.thumbsUpImgview.frame = CGRectMake(_viewWidth/2 - w_iconview/2, 10, self.iconSize, self.iconSize);
     self.thumbsUpImgview.tag = 101;
-    [self.thumbsUpImgview setImage:[UIImage svgImageNamed:@"thumbs-up" size:CGSizeMake(self.iconSize, self.iconSize) tintColor:isEmptyString_Nd(self.beforeSvgColor)?@"#333333":self.beforeSvgColor]];
+//    [self.thumbsUpImgview setImage:[UIImage svgImageNamed:@"thumbs-up" size:CGSizeMake(self.iconSize, self.iconSize) tintColor:isEmptyString_Nd(self.beforeSvgColor)?@"#333333":self.beforeSvgColor]];
+	
+	
+	// 获取资源包的路径
+	SVGKImage *svgImage;
+	NSBundle *bundle = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"DXPNudgesLib" ofType:@"bundle"]];
+	// 加载 SVG 文件
+	NSString *svgFilePath = [bundle pathForResource:@"thumbs-up" ofType:@"svg"];
+	if (svgFilePath) {
+		NSError *error = nil;
+		NSString *svgContent = [NSString stringWithContentsOfFile:svgFilePath encoding:NSUTF8StringEncoding error:&error];
+		if (error) {
+			NSLog(@"DXPNugges Log:=== Error reading SVG file: %@", error.localizedDescription);
+		} else {
+			// 替换填充颜色
+			NSString *desiredColorHex = isEmptyString_Nd(self.beforeSvgColor)?@"#333333":self.beforeSvgColor; // 你想要的颜色
+			svgContent = [svgContent stringByReplacingOccurrencesOfString:@"fill=\"#000000\"" withString:[NSString stringWithFormat:@"fill=\"%@\"", desiredColorHex]];
+			
+			// 将修改后的内容写入临时文件
+			NSString *tempFilePath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"temp1.svg"];
+			[svgContent writeToFile:tempFilePath atomically:YES encoding:NSUTF8StringEncoding error:nil];
+			
+			// 重新加载 SVG 内容
+			SVGKImage *svgImage = [SVGKImage imageWithContentsOfFile:tempFilePath];
+			self.thumbsUpImgview.image = svgImage.UIImage;
+		}
+	}
+	
+	
+	
     UITapGestureRecognizer *tapGesture1 = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(userTapRateView:)];
     tapGesture1.numberOfTapsRequired = 1;
     [self.thumbsUpImgview addGestureRecognizer:tapGesture1];
@@ -55,7 +85,34 @@
     [self.thumbsDownImgview setUserInteractionEnabled:YES];
     self.thumbsDownImgview.frame = CGRectMake(_viewWidth/2 - w_iconview/2 + self.iconSize + 10, 10, self.iconSize, self.iconSize);
     self.thumbsDownImgview.tag = 102;
-    [self.thumbsDownImgview setImage:[UIImage svgImageNamed:@"thumbs-down" size:CGSizeMake(self.iconSize, self.iconSize) tintColor:isEmptyString_Nd(self.beforeSvgColor)?@"#333333":self.beforeSvgColor]];
+//    [self.thumbsDownImgview setImage:[UIImage svgImageNamed:@"thumbs-down" size:CGSizeMake(self.iconSize, self.iconSize) tintColor:isEmptyString_Nd(self.beforeSvgColor)?@"#333333":self.beforeSvgColor]];
+	
+	// 获取资源包的路径
+	SVGKImage *svgImage;
+	NSBundle *bundle = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"DXPNudgesLib" ofType:@"bundle"]];
+	// 加载 SVG 文件
+	NSString *svgFilePath = [bundle pathForResource:@"thumbs-down" ofType:@"svg"];
+	if (svgFilePath) {
+		NSError *error = nil;
+		NSString *svgContent = [NSString stringWithContentsOfFile:svgFilePath encoding:NSUTF8StringEncoding error:&error];
+		if (error) {
+			NSLog(@"DXPNugges Log:=== Error reading SVG file: %@", error.localizedDescription);
+		} else {
+			// 替换填充颜色
+			NSString *desiredColorHex = isEmptyString_Nd(self.beforeSvgColor)?@"#333333":self.beforeSvgColor; // 你想要的颜色
+			svgContent = [svgContent stringByReplacingOccurrencesOfString:@"fill=\"#000000\"" withString:[NSString stringWithFormat:@"fill=\"%@\"", desiredColorHex]];
+			
+			// 将修改后的内容写入临时文件
+			NSString *tempFilePath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"temp2.svg"];
+			[svgContent writeToFile:tempFilePath atomically:YES encoding:NSUTF8StringEncoding error:nil];
+			
+			// 重新加载 SVG 内容
+			SVGKImage *svgImage = [SVGKImage imageWithContentsOfFile:tempFilePath];
+			self.thumbsDownImgview.image = svgImage.UIImage;
+		}
+	}
+	
+	
     UITapGestureRecognizer *tapGesture2 = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(userTapRateView:)];
     tapGesture2.numberOfTapsRequired = 1;
     [self.thumbsDownImgview addGestureRecognizer:tapGesture2];
@@ -65,15 +122,121 @@
     NSInteger tag = tap.view.tag;
     if (tag == 101) {
         // 选中
-        [self.thumbsUpImgview setImage:[UIImage svgImageNamed:@"thumbs-up" size:CGSizeMake(self.iconSize, self.iconSize) tintColor:isEmptyString_Nd(self.thumbsUpColor)?@"#e24a34":self.thumbsUpColor]];
+//        [self.thumbsUpImgview setImage:[UIImage svgImageNamed:@"thumbs-up" size:CGSizeMake(self.iconSize, self.iconSize) tintColor:isEmptyString_Nd(self.thumbsUpColor)?@"#e24a34":self.thumbsUpColor]];
         // 未选中颜色
-        [self.thumbsDownImgview setImage:[UIImage svgImageNamed:@"thumbs-down" size:CGSizeMake(self.iconSize, self.iconSize) tintColor:isEmptyString_Nd(self.beforeSvgColor)?@"#e24a34":self.beforeSvgColor]];
+//        [self.thumbsDownImgview setImage:[UIImage svgImageNamed:@"thumbs-down" size:CGSizeMake(self.iconSize, self.iconSize) tintColor:isEmptyString_Nd(self.beforeSvgColor)?@"#e24a34":self.beforeSvgColor]];
+		
+		
+		// 获取资源包的路径
+		SVGKImage *svgImage;
+		NSBundle *bundle = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"DXPNudgesLib" ofType:@"bundle"]];
+		// 加载 SVG 文件
+		NSString *svgFilePath = [bundle pathForResource:@"thumbs-up" ofType:@"svg"];
+		if (svgFilePath) {
+			NSError *error = nil;
+			NSString *svgContent = [NSString stringWithContentsOfFile:svgFilePath encoding:NSUTF8StringEncoding error:&error];
+			if (error) {
+				NSLog(@"DXPNugges Log:=== Error reading SVG file: %@", error.localizedDescription);
+			} else {
+				// 替换填充颜色
+				NSString *desiredColorHex = isEmptyString_Nd(self.thumbsUpColor)?@"#e24a34":self.thumbsUpColor; // 你想要的颜色
+				svgContent = [svgContent stringByReplacingOccurrencesOfString:@"fill=\"#000000\"" withString:[NSString stringWithFormat:@"fill=\"%@\"", desiredColorHex]];
+				
+				// 将修改后的内容写入临时文件
+				NSString *tempFilePath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"temp7.svg"];
+				[svgContent writeToFile:tempFilePath atomically:YES encoding:NSUTF8StringEncoding error:nil];
+				
+				// 重新加载 SVG 内容
+				SVGKImage *svgImage = [SVGKImage imageWithContentsOfFile:tempFilePath];
+				self.thumbsUpImgview.image = svgImage.UIImage;
+			}
+		}
+		
+		// 获取资源包的路径
+		SVGKImage *svgImage;
+		NSBundle *bundle = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"DXPNudgesLib" ofType:@"bundle"]];
+		// 加载 SVG 文件
+		NSString *svgFilePath = [bundle pathForResource:@"thumbs-down" ofType:@"svg"];
+		if (svgFilePath) {
+			NSError *error = nil;
+			NSString *svgContent = [NSString stringWithContentsOfFile:svgFilePath encoding:NSUTF8StringEncoding error:&error];
+			if (error) {
+				NSLog(@"DXPNugges Log:=== Error reading SVG file: %@", error.localizedDescription);
+			} else {
+				// 替换填充颜色
+				NSString *desiredColorHex = isEmptyString_Nd(self.beforeSvgColor)?@"#e24a34":self.beforeSvgColor; // 你想要的颜色
+				svgContent = [svgContent stringByReplacingOccurrencesOfString:@"fill=\"#000000\"" withString:[NSString stringWithFormat:@"fill=\"%@\"", desiredColorHex]];
+				
+				// 将修改后的内容写入临时文件
+				NSString *tempFilePath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"temp5.svg"];
+				[svgContent writeToFile:tempFilePath atomically:YES encoding:NSUTF8StringEncoding error:nil];
+				
+				// 重新加载 SVG 内容
+				SVGKImage *svgImage = [SVGKImage imageWithContentsOfFile:tempFilePath];
+				self.thumbsDownImgview.image = svgImage.UIImage;
+			}
+		}
+		
+		
     }
     if (tag == 102) {
         // 未选中颜色
-        [self.thumbsUpImgview setImage:[UIImage svgImageNamed:@"thumbs-up" size:CGSizeMake(self.iconSize, self.iconSize) tintColor:isEmptyString_Nd(self.beforeSvgColor)?@"#e24a34":self.beforeSvgColor]];
+//        [self.thumbsUpImgview setImage:[UIImage svgImageNamed:@"thumbs-up" size:CGSizeMake(self.iconSize, self.iconSize) tintColor:isEmptyString_Nd(self.beforeSvgColor)?@"#e24a34":self.beforeSvgColor]];
+		
+		// 获取资源包的路径
+		SVGKImage *svgImage;
+		NSBundle *bundle = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"DXPNudgesLib" ofType:@"bundle"]];
+		// 加载 SVG 文件
+		NSString *svgFilePath = [bundle pathForResource:@"thumbs-up" ofType:@"svg"];
+		if (svgFilePath) {
+			NSError *error = nil;
+			NSString *svgContent = [NSString stringWithContentsOfFile:svgFilePath encoding:NSUTF8StringEncoding error:&error];
+			if (error) {
+				NSLog(@"DXPNugges Log:=== Error reading SVG file: %@", error.localizedDescription);
+			} else {
+				// 替换填充颜色
+				NSString *desiredColorHex = isEmptyString_Nd(self.beforeSvgColor)?@"#e24a34":self.beforeSvgColor; // 你想要的颜色
+				svgContent = [svgContent stringByReplacingOccurrencesOfString:@"fill=\"#000000\"" withString:[NSString stringWithFormat:@"fill=\"%@\"", desiredColorHex]];
+				
+				// 将修改后的内容写入临时文件
+				NSString *tempFilePath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"temp9.svg"];
+				[svgContent writeToFile:tempFilePath atomically:YES encoding:NSUTF8StringEncoding error:nil];
+				
+				// 重新加载 SVG 内容
+				SVGKImage *svgImage = [SVGKImage imageWithContentsOfFile:tempFilePath];
+				self.thumbsUpImgview.image = svgImage.UIImage;
+			}
+		}
+		
         // 选中
-        [self.thumbsDownImgview setImage:[UIImage svgImageNamed:@"thumbs-down" size:CGSizeMake(self.iconSize, self.iconSize) tintColor:isEmptyString_Nd(self.thumbsDownColor)?@"#e24a34":self.thumbsDownColor]];
+//        [self.thumbsDownImgview setImage:[UIImage svgImageNamed:@"thumbs-down" size:CGSizeMake(self.iconSize, self.iconSize) tintColor:isEmptyString_Nd(self.thumbsDownColor)?@"#e24a34":self.thumbsDownColor]];
+		
+		// 获取资源包的路径
+		SVGKImage *svgImage;
+		NSBundle *bundle = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"DXPNudgesLib" ofType:@"bundle"]];
+		// 加载 SVG 文件
+		NSString *svgFilePath = [bundle pathForResource:@"thumbs-down" ofType:@"svg"];
+		if (svgFilePath) {
+			NSError *error = nil;
+			NSString *svgContent = [NSString stringWithContentsOfFile:svgFilePath encoding:NSUTF8StringEncoding error:&error];
+			if (error) {
+				NSLog(@"DXPNugges Log:=== Error reading SVG file: %@", error.localizedDescription);
+			} else {
+				// 替换填充颜色
+				NSString *desiredColorHex = isEmptyString_Nd(self.thumbsDownColor)?@"#e24a34":self.thumbsDownColor; // 你想要的颜色
+				svgContent = [svgContent stringByReplacingOccurrencesOfString:@"fill=\"#000000\"" withString:[NSString stringWithFormat:@"fill=\"%@\"", desiredColorHex]];
+				
+				// 将修改后的内容写入临时文件
+				NSString *tempFilePath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"temp0.svg"];
+				[svgContent writeToFile:tempFilePath atomically:YES encoding:NSUTF8StringEncoding error:nil];
+				
+				// 重新加载 SVG 内容
+				SVGKImage *svgImage = [SVGKImage imageWithContentsOfFile:tempFilePath];
+				self.thumbsDownImgview.image = svgImage.UIImage;
+			}
+		}
+		
+		
     }
     
     if (self.sendThumnsVal) {

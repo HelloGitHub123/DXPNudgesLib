@@ -24,6 +24,7 @@
 #import "TKUtils.h"
 #import <DXPFontManagerLib/FontManager.h>
 #import "UIImage+SVGManager.h"
+#import <SVGKit/SVGKImage.h>
 
 #define Padding_Spacing 16
 #define View_Spacing  10 // view 之间的间距
@@ -286,12 +287,30 @@ static HJToolTipsManager *manager = nil;
 		}];
 //		[dissButton setImage:[UIImage svgImageNamed:@"Vector" size:CGSizeMake(iconSize, iconSize) tintColor:isEmptyString_Nd(baseModel.dismissButtonModel.iconStyle.iconColor)?@"#FFFFFF":baseModel.dismissButtonModel.iconStyle.iconColor]];
 		
-		dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-			UIImage *svgImage = [UIImage svgImageNamed:@"Vector" size:CGSizeMake(iconSize, iconSize) tintColor:isEmptyString_Nd(baseModel.dismissButtonModel.iconStyle.iconColor) ? @"#FFFFFF" : baseModel.dismissButtonModel.iconStyle.iconColor];
-			dispatch_async(dispatch_get_main_queue(), ^{
-				dissButton.image = svgImage;
-			});
-		});
+		// 获取资源包的路径
+		SVGKImage *svgImage;
+		NSBundle *bundle = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"DXPNudgesLib" ofType:@"bundle"]];
+		// 加载 SVG 文件
+		NSString *svgFilePath = [bundle pathForResource:@"Vector" ofType:@"svg"];
+		if (svgFilePath) {
+			NSError *error = nil;
+			NSString *svgContent = [NSString stringWithContentsOfFile:svgFilePath encoding:NSUTF8StringEncoding error:&error];
+			if (error) {
+				NSLog(@"DXPNugges Log:=== Error reading SVG file: %@", error.localizedDescription);
+			} else {
+				// 替换填充颜色
+				NSString *desiredColorHex = isEmptyString_Nd(baseModel.dismissButtonModel.iconStyle.iconColor)?@"#FFFFFF":baseModel.dismissButtonModel.iconStyle.iconColor; // 你想要的颜色
+				svgContent = [svgContent stringByReplacingOccurrencesOfString:@"fill=\"white\"" withString:[NSString stringWithFormat:@"fill=\"%@\"", desiredColorHex]];
+				
+				// 将修改后的内容写入临时文件
+				NSString *tempFilePath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"temp.svg"];
+				[svgContent writeToFile:tempFilePath atomically:YES encoding:NSUTF8StringEncoding error:nil];
+				
+				// 重新加载 SVG 内容
+				SVGKImage *svgImage = [SVGKImage imageWithContentsOfFile:tempFilePath];
+				dissButton.image = svgImage.UIImage;
+			}
+		}
 		
 		
 		UITapGestureRecognizer *tapGesture1 = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(dissMissButtonClick:)];

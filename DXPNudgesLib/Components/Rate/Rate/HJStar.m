@@ -9,6 +9,7 @@
 #import "HJStar.h"
 #import "UIImage+SVGManager.h"
 #import "Nudges.h"
+#import <SVGKit/SVGKImage.h>
 
 #define DEFALUT_STAR_NUMBER 5 // 星星的个数
 #define ANIMATION_TIME_INTERVAL 0.1
@@ -108,7 +109,35 @@
         imgView.frame = CGRectMake(i*self.iconSize + space * i, 10, self.iconSize, self.iconSize);
         imgView.contentMode = UIViewContentModeScaleAspectFit;
         [self addSubview:imgView];
-        [imgView setImage:[UIImage svgImageNamed:svgName size:CGSizeMake(self.iconSize, self.iconSize) tintColor:isEmptyString_Nd(self.beforeSvgColor)?@"#333333":self.beforeSvgColor]];
+//        [imgView setImage:[UIImage svgImageNamed:svgName size:CGSizeMake(self.iconSize, self.iconSize) tintColor:isEmptyString_Nd(self.beforeSvgColor)?@"#333333":self.beforeSvgColor]];
+		
+		// 获取资源包的路径
+		SVGKImage *svgImage;
+		NSBundle *bundle = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"DXPNudgesLib" ofType:@"bundle"]];
+		// 加载 SVG 文件
+		NSString *svgFilePath = [bundle pathForResource:svgName ofType:@"svg"];
+		if (svgFilePath) {
+			NSError *error = nil;
+			NSString *svgContent = [NSString stringWithContentsOfFile:svgFilePath encoding:NSUTF8StringEncoding error:&error];
+			if (error) {
+				NSLog(@"DXPNugges Log:=== Error reading SVG file: %@", error.localizedDescription);
+			} else {
+				// 替换填充颜色
+				NSString *desiredColorHex = isEmptyString_Nd(self.beforeSvgColor)?@"#333333":self.beforeSvgColor; // 你想要的颜色
+				svgContent = [svgContent stringByReplacingOccurrencesOfString:@"fill=\"#000000\"" withString:[NSString stringWithFormat:@"fill=\"%@\"", desiredColorHex]];
+				
+				// 将修改后的内容写入临时文件
+				NSString *tempFilePath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"temp1.svg"];
+				[svgContent writeToFile:tempFilePath atomically:YES encoding:NSUTF8StringEncoding error:nil];
+				
+				// 重新加载 SVG 内容
+				SVGKImage *svgImage = [SVGKImage imageWithContentsOfFile:tempFilePath];
+				imgView.image = svgImage.UIImage;
+			}
+		}
+		
+		
+		
         [self.starList addObject:imgView];
     }
     return view;
@@ -127,9 +156,61 @@
             UIImageView *imgView  = [self.starList objectAtIndex:i];
             [self addSubview:imgView];
             if (i < weakSelf.scorePercent / 2 * 10) {
-                [imgView setImage:[UIImage svgImageNamed:svgName size:CGSizeMake(self.iconSize, self.iconSize) tintColor:isEmptyString_Nd(self.afterSvgColor)?@"#e24a34":self.afterSvgColor]];
+//                [imgView setImage:[UIImage svgImageNamed:svgName size:CGSizeMake(self.iconSize, self.iconSize) tintColor:isEmptyString_Nd(self.afterSvgColor)?@"#e24a34":self.afterSvgColor]];
+				
+				// 获取资源包的路径
+				SVGKImage *svgImage;
+				NSBundle *bundle = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"DXPNudgesLib" ofType:@"bundle"]];
+				// 加载 SVG 文件
+				NSString *svgFilePath = [bundle pathForResource:svgName ofType:@"svg"];
+				if (svgFilePath) {
+					NSError *error = nil;
+					NSString *svgContent = [NSString stringWithContentsOfFile:svgFilePath encoding:NSUTF8StringEncoding error:&error];
+					if (error) {
+						NSLog(@"DXPNugges Log:=== Error reading SVG file: %@", error.localizedDescription);
+					} else {
+						// 替换填充颜色
+						NSString *desiredColorHex = isEmptyString_Nd(self.afterSvgColor)?@"#e24a34":self.afterSvgColor; // 你想要的颜色
+						svgContent = [svgContent stringByReplacingOccurrencesOfString:@"fill=\"#000000\"" withString:[NSString stringWithFormat:@"fill=\"%@\"", desiredColorHex]];
+						
+						// 将修改后的内容写入临时文件
+						NSString *tempFilePath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"temp2.svg"];
+						[svgContent writeToFile:tempFilePath atomically:YES encoding:NSUTF8StringEncoding error:nil];
+						
+						// 重新加载 SVG 内容
+						SVGKImage *svgImage = [SVGKImage imageWithContentsOfFile:tempFilePath];
+						imgView.image = svgImage.UIImage;
+					}
+				}
+				
             } else {
-                [imgView setImage:[UIImage svgImageNamed:svgName size:CGSizeMake(self.iconSize, self.iconSize) tintColor:isEmptyString_Nd(self.beforeSvgColor)?@"#333333":self.beforeSvgColor]];
+//                [imgView setImage:[UIImage svgImageNamed:svgName size:CGSizeMake(self.iconSize, self.iconSize) tintColor:isEmptyString_Nd(self.beforeSvgColor)?@"#333333":self.beforeSvgColor]];
+				
+				// 获取资源包的路径
+				SVGKImage *svgImage;
+				NSBundle *bundle = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"DXPNudgesLib" ofType:@"bundle"]];
+				// 加载 SVG 文件
+				NSString *svgFilePath = [bundle pathForResource:svgName ofType:@"svg"];
+				if (svgFilePath) {
+					NSError *error = nil;
+					NSString *svgContent = [NSString stringWithContentsOfFile:svgFilePath encoding:NSUTF8StringEncoding error:&error];
+					if (error) {
+						NSLog(@"DXPNugges Log:=== Error reading SVG file: %@", error.localizedDescription);
+					} else {
+						// 替换填充颜色
+						NSString *desiredColorHex = isEmptyString_Nd(self.beforeSvgColor)?@"#333333":self.beforeSvgColor; // 你想要的颜色
+						svgContent = [svgContent stringByReplacingOccurrencesOfString:@"fill=\"#000000\"" withString:[NSString stringWithFormat:@"fill=\"%@\"", desiredColorHex]];
+						
+						// 将修改后的内容写入临时文件
+						NSString *tempFilePath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"temp3.svg"];
+						[svgContent writeToFile:tempFilePath atomically:YES encoding:NSUTF8StringEncoding error:nil];
+						
+						// 重新加载 SVG 内容
+						SVGKImage *svgImage = [SVGKImage imageWithContentsOfFile:tempFilePath];
+						imgView.image = svgImage.UIImage;
+					}
+				}
+				
             }
         }
     }];
