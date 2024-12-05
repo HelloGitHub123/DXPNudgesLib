@@ -75,7 +75,7 @@ static HJNudgesManager *manager = nil;
     
     [NdIMDBManager initDBSettings];
 	  
-	  NSLog(@"DXPNudges Log:===  Nudges SDK: 1.0.31");
+	  NSLog(@"DXPNudges Log:===  Nudges SDK: 1.0.32");
   }
   return self;
 }

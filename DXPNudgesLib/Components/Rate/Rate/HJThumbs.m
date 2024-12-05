@@ -51,12 +51,12 @@
 	
 	
 	// 获取资源包的路径
-	NSBundle *bundle = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"DXPNudgesLib" ofType:@"bundle"]];
+	NSBundle *bundle1 = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"DXPNudgesLib" ofType:@"bundle"]];
 	// 加载 SVG 文件
-	NSString *svgFilePath = [bundle pathForResource:@"thumbs-up" ofType:@"svg"];
-	if (svgFilePath) {
+	NSString *svgFilePath1 = [bundle1 pathForResource:@"thumbs-up" ofType:@"svg"];
+	if (svgFilePath1) {
 		NSError *error = nil;
-		NSString *svgContent = [NSString stringWithContentsOfFile:svgFilePath encoding:NSUTF8StringEncoding error:&error];
+		NSString *svgContent = [NSString stringWithContentsOfFile:svgFilePath1 encoding:NSUTF8StringEncoding error:&error];
 		if (error) {
 			NSLog(@"DXPNugges Log:=== Error reading SVG file: %@", error.localizedDescription);
 		} else {
@@ -87,12 +87,12 @@
 //    [self.thumbsDownImgview setImage:[UIImage svgImageNamed:@"thumbs-down" size:CGSizeMake(self.iconSize, self.iconSize) tintColor:isEmptyString_Nd(self.beforeSvgColor)?@"#333333":self.beforeSvgColor]];
 	
 	// 获取资源包的路径
-	NSBundle *bundle = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"DXPNudgesLib" ofType:@"bundle"]];
+	NSBundle *bundle2 = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"DXPNudgesLib" ofType:@"bundle"]];
 	// 加载 SVG 文件
-	NSString *svgFilePath = [bundle pathForResource:@"thumbs-down" ofType:@"svg"];
-	if (svgFilePath) {
+	NSString *svgFilePath2 = [bundle2 pathForResource:@"thumbs-down" ofType:@"svg"];
+	if (svgFilePath2) {
 		NSError *error = nil;
-		NSString *svgContent = [NSString stringWithContentsOfFile:svgFilePath encoding:NSUTF8StringEncoding error:&error];
+		NSString *svgContent = [NSString stringWithContentsOfFile:svgFilePath2 encoding:NSUTF8StringEncoding error:&error];
 		if (error) {
 			NSLog(@"DXPNugges Log:=== Error reading SVG file: %@", error.localizedDescription);
 		} else {
@@ -126,12 +126,12 @@
 		
 		
 		// 获取资源包的路径
-		NSBundle *bundle = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"DXPNudgesLib" ofType:@"bundle"]];
+		NSBundle *bundle3 = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"DXPNudgesLib" ofType:@"bundle"]];
 		// 加载 SVG 文件
-		NSString *svgFilePath = [bundle pathForResource:@"thumbs-up" ofType:@"svg"];
-		if (svgFilePath) {
+		NSString *svgFilePath3 = [bundle3 pathForResource:@"thumbs-up" ofType:@"svg"];
+		if (svgFilePath3) {
 			NSError *error = nil;
-			NSString *svgContent = [NSString stringWithContentsOfFile:svgFilePath encoding:NSUTF8StringEncoding error:&error];
+			NSString *svgContent = [NSString stringWithContentsOfFile:svgFilePath3 encoding:NSUTF8StringEncoding error:&error];
 			if (error) {
 				NSLog(@"DXPNugges Log:=== Error reading SVG file: %@", error.localizedDescription);
 			} else {
@@ -150,12 +150,12 @@
 		}
 		
 		// 获取资源包的路径
-		NSBundle *bundle = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"DXPNudgesLib" ofType:@"bundle"]];
+		NSBundle *bundle4 = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"DXPNudgesLib" ofType:@"bundle"]];
 		// 加载 SVG 文件
-		NSString *svgFilePath = [bundle pathForResource:@"thumbs-down" ofType:@"svg"];
-		if (svgFilePath) {
+		NSString *svgFilePath4 = [bundle4 pathForResource:@"thumbs-down" ofType:@"svg"];
+		if (svgFilePath4) {
 			NSError *error = nil;
-			NSString *svgContent = [NSString stringWithContentsOfFile:svgFilePath encoding:NSUTF8StringEncoding error:&error];
+			NSString *svgContent = [NSString stringWithContentsOfFile:svgFilePath4 encoding:NSUTF8StringEncoding error:&error];
 			if (error) {
 				NSLog(@"DXPNugges Log:=== Error reading SVG file: %@", error.localizedDescription);
 			} else {
@@ -180,12 +180,12 @@
 //        [self.thumbsUpImgview setImage:[UIImage svgImageNamed:@"thumbs-up" size:CGSizeMake(self.iconSize, self.iconSize) tintColor:isEmptyString_Nd(self.beforeSvgColor)?@"#e24a34":self.beforeSvgColor]];
 		
 		// 获取资源包的路径
-		NSBundle *bundle = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"DXPNudgesLib" ofType:@"bundle"]];
+		NSBundle *bundle5 = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"DXPNudgesLib" ofType:@"bundle"]];
 		// 加载 SVG 文件
-		NSString *svgFilePath = [bundle pathForResource:@"thumbs-up" ofType:@"svg"];
-		if (svgFilePath) {
+		NSString *svgFilePath5 = [bundle5 pathForResource:@"thumbs-up" ofType:@"svg"];
+		if (svgFilePath5) {
 			NSError *error = nil;
-			NSString *svgContent = [NSString stringWithContentsOfFile:svgFilePath encoding:NSUTF8StringEncoding error:&error];
+			NSString *svgContent = [NSString stringWithContentsOfFile:svgFilePath5 encoding:NSUTF8StringEncoding error:&error];
 			if (error) {
 				NSLog(@"DXPNugges Log:=== Error reading SVG file: %@", error.localizedDescription);
 			} else {
@@ -207,12 +207,12 @@
 //        [self.thumbsDownImgview setImage:[UIImage svgImageNamed:@"thumbs-down" size:CGSizeMake(self.iconSize, self.iconSize) tintColor:isEmptyString_Nd(self.thumbsDownColor)?@"#e24a34":self.thumbsDownColor]];
 		
 		// 获取资源包的路径
-		NSBundle *bundle = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"DXPNudgesLib" ofType:@"bundle"]];
+		NSBundle *bundle6 = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"DXPNudgesLib" ofType:@"bundle"]];
 		// 加载 SVG 文件
-		NSString *svgFilePath = [bundle pathForResource:@"thumbs-down" ofType:@"svg"];
-		if (svgFilePath) {
+		NSString *svgFilePath6 = [bundle6 pathForResource:@"thumbs-down" ofType:@"svg"];
+		if (svgFilePath6) {
 			NSError *error = nil;
-			NSString *svgContent = [NSString stringWithContentsOfFile:svgFilePath encoding:NSUTF8StringEncoding error:&error];
+			NSString *svgContent = [NSString stringWithContentsOfFile:svgFilePath6 encoding:NSUTF8StringEncoding error:&error];
 			if (error) {
 				NSLog(@"DXPNugges Log:=== Error reading SVG file: %@", error.localizedDescription);
 			} else {
